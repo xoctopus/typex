@@ -1,0 +1,346 @@
+package typex
+
+import (
+	"go/types"
+	"reflect"
+
+	"github.com/pkg/errors"
+	"github.com/xoctopus/x/reflectx"
+
+	"github.com/xoctopus/typex/internal"
+	"github.com/xoctopus/typex/internal/gtypex"
+	"github.com/xoctopus/typex/internal/inspectx"
+)
+
+func NewTType(t any) Type {
+	var tt types.Type
+	switch t.(type) {
+	case reflect.Type:
+		tt = internal.Global().TType(t)
+	case types.Type:
+		tt = t.(types.Type)
+		switch tt.(type) {
+		case *types.Union, *types.Tuple, *types.TypeParam:
+			panic(errors.Errorf("invalid NewTType by types.Type for `%T`", tt))
+		case *types.Alias:
+			tt = tt.(*types.Alias).Rhs()
+		}
+	default:
+		panic(errors.Errorf("invalid NewTType type `%T`", t))
+	}
+
+	return &ttype{tt, internal.Global().Literalize(tt), inspectx.InspectMethods(tt)}
+}
+
+type ttype struct {
+	t       types.Type
+	u       internal.Literal
+	methods []*types.Func
+}
+
+func (t *ttype) Unwrap() any { return t.t }
+
+func (t *ttype) Kind() reflect.Kind {
+	switch x := t.t.(type) {
+	case *types.Basic:
+		return t.u.(internal.Builtin).Kind()
+	case *types.Interface:
+		return reflect.Interface
+	case *types.Struct:
+		return reflect.Struct
+	case *types.Pointer:
+		return reflect.Pointer
+	case *types.Slice:
+		return reflect.Slice
+	case *types.Array:
+		return reflect.Array
+	case *types.Map:
+		return reflect.Map
+	case *types.Chan:
+		return reflect.Chan
+	case *types.Signature:
+		return reflect.Func
+	default:
+		x = reflectx.MustAssertType[*types.Named](t.t)
+		return NewTType(x.Underlying()).Kind()
+	}
+}
+
+func (t *ttype) PkgPath() string { return t.u.PkgPath() }
+
+func (t *ttype) Name() string { return t.u.Name() }
+
+func (t *ttype) String() string { return t.u.String() }
+
+func (t *ttype) Alias() string {
+	if tt, ok := t.u.(internal.Builtin); ok {
+		return tt.Alias()
+	}
+	return ""
+}
+
+func (t *ttype) Typename() string { return t.u.Typename() }
+
+func (t *ttype) Implements(u any) bool {
+	switch x := u.(type) {
+	case Type:
+		return t.Implements(x.Unwrap())
+	case types.Type:
+		if underlying, ok := x.Underlying().(*types.Interface); ok {
+			return types.Implements(t.t, underlying)
+		}
+		return false
+	case reflect.Type:
+		if x.Kind() != reflect.Interface {
+			return false
+		}
+		return t.Implements(NewTType(x))
+	default:
+		return false
+	}
+}
+
+func (t *ttype) AssignableTo(u any) bool {
+	switch x := u.(type) {
+	case Type:
+		return t.AssignableTo(x.Unwrap())
+	case reflect.Type:
+		return types.AssignableTo(t.t, internal.Global().TType(x))
+	case types.Type:
+		return types.AssignableTo(t.t, x)
+	default:
+		return false
+	}
+}
+
+func (t *ttype) ConvertibleTo(u any) bool {
+	switch x := u.(type) {
+	case Type:
+		return t.ConvertibleTo(x.Unwrap())
+	case reflect.Type:
+		return types.ConvertibleTo(t.t, internal.Global().TType(x))
+	case types.Type:
+		return types.ConvertibleTo(t.t, x)
+	default:
+		return false
+	}
+}
+
+func (t *ttype) Comparable() bool {
+	return types.Comparable(gtypex.Underlying(t.t))
+}
+
+func (t *ttype) Key() Type {
+	switch x := t.t.(type) {
+	case interface{ Key() types.Type }:
+		return NewTType(x.Key())
+	case *types.Named:
+		underlying := gtypex.Underlying(x)
+		return NewTType(underlying).Key()
+	default:
+		return nil
+	}
+}
+
+func (t *ttype) Elem() Type {
+	switch x := t.t.(type) {
+	case interface{ Elem() types.Type }:
+		return NewTType(x.Elem())
+	case *types.Named:
+		return NewTType(gtypex.Underlying(x)).Elem()
+	default:
+		return nil
+	}
+}
+
+func (t *ttype) Len() int {
+	switch x := t.t.(type) {
+	case *types.Array:
+		return int(x.Len())
+	case *types.Named:
+		return NewTType(gtypex.Underlying(x)).Len()
+	default:
+		return 0
+	}
+}
+
+func (t *ttype) NumField() int {
+	switch x := t.t.(type) {
+	case *types.Struct:
+		return x.NumFields()
+	case *types.Named:
+		return NewTType(x.Underlying()).NumField()
+	default:
+		return 0
+	}
+}
+
+func (t *ttype) Field(i int) StructField {
+	switch x := t.t.(type) {
+	case *types.Struct:
+		if i >= 0 && i < x.NumFields() {
+			return &TStructField{v: x.Field(i), tag: x.Tag(i)}
+		}
+		return nil
+	case *types.Named:
+		return NewTType(gtypex.Underlying(x)).Field(i)
+	default:
+		return nil
+	}
+}
+
+func (t *ttype) FieldByName(name string) (StructField, bool) {
+	f := inspectx.FieldByName(t.t, name)
+	if f != nil {
+		return &TStructField{v: f.Var(), tag: f.Tag()}, true
+	}
+	return nil, false
+}
+
+func (t *ttype) FieldByNameFunc(match func(string) bool) (StructField, bool) {
+	f := inspectx.FieldByNameFunc(t.t, match)
+	if f != nil {
+		return &TStructField{v: f.Var(), tag: f.Tag()}, true
+	}
+	return nil, false
+}
+
+func (t *ttype) NumMethod() int {
+	return len(t.methods)
+}
+
+func (t *ttype) Method(i int) Method {
+	if i >= 0 && i < len(t.methods) {
+		return &TMethod{r: t.t, f: t.methods[i]}
+	}
+	return nil
+}
+
+func (t *ttype) MethodByName(name string) (Method, bool) {
+	for _, m := range t.methods {
+		if m.Name() == name {
+			return &TMethod{r: t.t, f: m}, true
+		}
+	}
+	return nil, false
+}
+
+func (t *ttype) IsVariadic() bool {
+	switch x := t.t.(type) {
+	case *types.Signature:
+		return x.Variadic()
+	case *types.Named:
+		return NewTType(x.Underlying()).IsVariadic()
+	default:
+		return false
+	}
+}
+
+func (t *ttype) NumIn() int {
+	switch x := t.t.(type) {
+	case *types.Signature:
+		return x.Params().Len()
+	case *types.Named:
+		return NewTType(x.Underlying()).NumIn()
+	default:
+		return 0
+	}
+}
+
+func (t *ttype) In(i int) Type {
+	switch x := t.t.(type) {
+	case *types.Signature:
+		if i >= 0 && i < x.Params().Len() {
+			return NewTType(x.Params().At(i).Type())
+		}
+		return nil
+	case *types.Named:
+		return NewTType(x.Underlying()).In(i)
+	default:
+		return nil
+	}
+}
+
+func (t *ttype) NumOut() int {
+	switch x := t.t.(type) {
+	case *types.Signature:
+		return x.Results().Len()
+	case *types.Named:
+		return NewTType(x.Underlying()).NumOut()
+	default:
+		return 0
+	}
+}
+
+func (t *ttype) Out(i int) Type {
+	switch x := t.t.(type) {
+	case *types.Signature:
+		if i >= 0 && i < x.Results().Len() {
+			return NewTType(x.Results().At(i).Type())
+		}
+		return nil
+	case *types.Named:
+		return NewTType(x.Underlying()).Out(i)
+	default:
+		return nil
+	}
+}
+
+type TStructField struct {
+	v   *types.Var
+	tag string
+}
+
+func (f *TStructField) PkgPath() string {
+	if pkg := f.v.Pkg(); pkg != nil && !f.v.Exported() {
+		return pkg.Path()
+	}
+	return ""
+}
+
+func (f *TStructField) Name() string {
+	return f.v.Name()
+}
+
+func (f *TStructField) Type() Type {
+	return NewTType(f.v.Type())
+}
+
+func (f *TStructField) Tag() reflect.StructTag {
+	return reflect.StructTag(f.tag)
+}
+
+func (f *TStructField) Anonymous() bool {
+	return f.v.Anonymous()
+}
+
+type TMethod struct {
+	r types.Type
+	f *types.Func
+}
+
+func (m *TMethod) PkgPath() string {
+	// unexported methods were hidden in static analysis
+	return ""
+}
+
+func (m *TMethod) Name() string {
+	return m.f.Name()
+}
+
+func (m *TMethod) Type() Type {
+	s := m.f.Signature()
+	params := make([]*types.Var, 0, s.Params().Len()+1)
+	if _, ok := m.r.Underlying().(*types.Interface); !ok {
+		params = append(params, types.NewParam(0, nil, "", m.r))
+	}
+	for i := range s.Params().Len() {
+		params = append(params, s.Params().At(i))
+	}
+	return NewTType(types.NewSignatureType(
+		nil, nil, nil,
+		types.NewTuple(params...),
+		s.Results(),
+		s.Variadic(),
+	))
+}
