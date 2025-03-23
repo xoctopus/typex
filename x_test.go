@@ -11,10 +11,10 @@ import (
 
 	"github.com/xoctopus/typex"
 	"github.com/xoctopus/typex/internal/pkgx"
-	"github.com/xoctopus/typex/internal/testdata"
+	"github.com/xoctopus/typex/testdata"
 )
 
-var pkg = pkgx.New("github.com/xoctopus/typex/internal/testdata")
+var pkg = pkgx.New("github.com/xoctopus/typex/testdata")
 
 func init() {
 	testdata.RegisterInstantiations(

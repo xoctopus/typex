@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/xoctopus/x/resultx"
 
-	. "github.com/xoctopus/typex/internal/parsex"
+	"github.com/xoctopus/typex/internal/parsex"
 )
 
 var cases = []struct {
@@ -57,8 +57,8 @@ var cases = []struct {
 
 func TestBracketedAndSeparate(t *testing.T) {
 	for _, c := range cases {
-		sub, l, r := Bracketed(c.id, c.bracket)
-		parts := Separate(sub, c.sep)
+		sub, l, r := parsex.Bracketed(c.id, c.bracket)
+		parts := parsex.Separate(sub, c.sep)
 		NewWithT(t).Expect(parts).To(Equal(c.parts))
 		if sub != "" {
 			NewWithT(t).Expect(c.id[l+1 : r]).To(Equal(sub))
@@ -78,11 +78,11 @@ func Example_structInTypeArguments() {
 	}]{})
 	fmt.Println(t1.String())
 
-	targs0 := resultx.ResultsOf(Bracketed(t1.String(), '[')).At(0).(string)
-	fields := resultx.ResultsOf(Bracketed(targs0, '{')).At(0).(string)
+	targs0 := resultx.ResultsOf(parsex.Bracketed(t1.String(), '[')).At(0).(string)
+	fields := resultx.ResultsOf(parsex.Bracketed(targs0, '{')).At(0).(string)
 
-	for i, f := range Separate(fields, ';') {
-		name, typ, tag := FieldInfo(f)
+	for i, f := range parsex.Separate(fields, ';') {
+		name, typ, tag := parsex.FieldInfo(f)
 		fmt.Printf("field%d: name=%s;type=%s;tag=%s\n", i, name, typ, tag)
 	}
 
@@ -104,8 +104,8 @@ func TestFieldInfo(t *testing.T) {
 			AA      struct{ B int }
 		}]{})
 
-		fields := resultx.ResultsOf(Bracketed(
-			resultx.ResultsOf(Bracketed(tt.String(), '[')).At(0).(string),
+		fields := resultx.ResultsOf(parsex.Bracketed(
+			resultx.ResultsOf(parsex.Bracketed(tt.String(), '[')).At(0).(string),
 			'{',
 		)).At(0).(string)
 
@@ -119,8 +119,8 @@ func TestFieldInfo(t *testing.T) {
 			{"AA", "struct { B int }", ""},
 		}
 
-		for i, f := range Separate(fields, ';') {
-			name, typ, tag := FieldInfo(f)
+		for i, f := range parsex.Separate(fields, ';') {
+			name, typ, tag := parsex.FieldInfo(f)
 			NewWithT(t).Expect(name).To(Equal(expects[i][0]))
 			NewWithT(t).Expect(typ).To(Equal(expects[i][1]))
 			NewWithT(t).Expect(tag).To(Equal(expects[i][2]))
@@ -137,7 +137,7 @@ func TestFieldInfo(t *testing.T) {
 			AA      struct{ B int }
 		}{})
 
-		fields := resultx.ResultsOf(Bracketed(tt.String(), '{')).At(0).(string)
+		fields := resultx.ResultsOf(parsex.Bracketed(tt.String(), '{')).At(0).(string)
 
 		expects := [][3]string{
 			{"", "string", ""},
@@ -149,8 +149,8 @@ func TestFieldInfo(t *testing.T) {
 			{"AA", "struct { B int }", ""},
 		}
 
-		for i, f := range Separate(fields, ';') {
-			name, typ, tag := FieldInfo(f)
+		for i, f := range parsex.Separate(fields, ';') {
+			name, typ, tag := parsex.FieldInfo(f)
 			NewWithT(t).Expect(name).To(Equal(expects[i][0]))
 			NewWithT(t).Expect(typ).To(Equal(expects[i][1]))
 			NewWithT(t).Expect(tag).To(Equal(expects[i][2]))

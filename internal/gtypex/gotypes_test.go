@@ -9,10 +9,9 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/xoctopus/typex/internal"
-	"github.com/xoctopus/typex/internal/pkgx"
-	"github.com/xoctopus/typex/internal/testdata"
-
 	"github.com/xoctopus/typex/internal/gtypex"
+	"github.com/xoctopus/typex/internal/pkgx"
+	"github.com/xoctopus/typex/testdata"
 )
 
 type Generic[T any] struct {

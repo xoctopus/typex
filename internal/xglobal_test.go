@@ -16,12 +16,12 @@ import (
 
 	"github.com/xoctopus/typex/internal"
 	"github.com/xoctopus/typex/internal/pkgx"
-	"github.com/xoctopus/typex/internal/testdata"
+	"github.com/xoctopus/typex/testdata"
 )
 
 var (
 	g = internal.Global()
-	p = pkgx.New("github.com/xoctopus/typex/internal/testdata")
+	p = pkgx.New("github.com/xoctopus/typex/testdata")
 
 	tTestdataTagged                 = pkgx.MustLookup[*types.Named](p, "Tagged")
 	tTestdataTypedSliceAliasNetAddr = pkgx.MustLookup[*types.Alias](p, "TypedSliceAliasNetAddr")
@@ -107,24 +107,24 @@ var GlobalCases = []struct {
 	{
 		reflect.TypeFor[chan<- testdata.Tagged](),
 		types.NewChan(types.SendOnly, tTestdataTagged),
-		"chan<- github.com/xoctopus/typex/internal/testdata.Tagged",
-		"chan<- xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged",
+		"chan<- github.com/xoctopus/typex/testdata.Tagged",
+		"chan<- xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.Tagged",
 		"", "",
 		"chan<- testdata.Tagged",
 	},
 	{
 		reflect.TypeFor[<-chan *testdata.Tagged](),
 		types.NewChan(types.RecvOnly, types.NewPointer(tTestdataTagged)),
-		"<-chan *github.com/xoctopus/typex/internal/testdata.Tagged",
-		"<-chan *xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged",
+		"<-chan *github.com/xoctopus/typex/testdata.Tagged",
+		"<-chan *xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.Tagged",
 		"", "",
 		"<-chan *testdata.Tagged",
 	},
 	{
 		reflect.TypeFor[[]testdata.Tagged](),
 		types.NewSlice(tTestdataTagged),
-		"[]github.com/xoctopus/typex/internal/testdata.Tagged",
-		"[]xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged",
+		"[]github.com/xoctopus/typex/testdata.Tagged",
+		"[]xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.Tagged",
 		"", "",
 		"[]testdata.Tagged",
 	},
@@ -184,9 +184,9 @@ var GlobalCases = []struct {
 	{
 		reflect.TypeFor[testdata.TypedSliceAliasNetAddr](),
 		tTestdataTypedSliceAliasNetAddr,
-		"github.com/xoctopus/typex/internal/testdata.TypedSlice[net.Addr]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedSlice[net.Addr]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedSlice[net.Addr]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedSlice[net.Addr]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedSlice[net.Addr]",
 		"testdata.TypedSlice[net.Addr]",
 	},
@@ -206,8 +206,8 @@ var GlobalCases = []struct {
 			types.NewField(0, nil, "B", types.Typ[types.Int], false),
 			types.NewField(0, p.Unwrap(), "", tTestdataMap, true),
 		}, []string{"", "", `json:"esc''{}[]\""`}),
-		`struct { A string; B int; github.com/xoctopus/typex/internal/testdata.Map "json:\"esc''{}[]\\\"\"" }`,
-		`struct { A string; B int; xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Map "json:\"esc''{}[]\\\"\"" }`,
+		`struct { A string; B int; github.com/xoctopus/typex/testdata.Map "json:\"esc''{}[]\\\"\"" }`,
+		`struct { A string; B int; xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.Map "json:\"esc''{}[]\\\"\"" }`,
 		"", "",
 		`struct { A string; B int; testdata.Map "json:\"esc''{}[]\\\"\"" }`,
 	},
@@ -223,9 +223,9 @@ var GlobalCases = []struct {
 				types.Typ[types.Int], tNetAddr,
 			}, true),
 		),
-		"github.com/xoctopus/typex/internal/testdata.PassTypeParam[int,net.Addr]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.PassTypeParam[int,net.Addr]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.PassTypeParam[int,net.Addr]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.PassTypeParam[int,net.Addr]",
+		"github.com/xoctopus/typex/testdata",
 		"PassTypeParam[int,net.Addr]",
 		"testdata.PassTypeParam[int,net.Addr]",
 	},
@@ -235,9 +235,9 @@ var GlobalCases = []struct {
 			nil, tTestdataTypedArray,
 			[]types.Type{types.NewSlice(types.Typ[types.String])}, true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[[]string]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[[]string]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[[]string]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[[]string]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[[]string]",
 		"testdata.TypedArray[[]string]",
 	},
@@ -247,9 +247,9 @@ var GlobalCases = []struct {
 			nil, tTestdataTypedArray,
 			[]types.Type{types.NewArray(types.Typ[types.String], 2)}, true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[[2]string]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[[2]string]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[[2]string]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[[2]string]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[[2]string]",
 		"testdata.TypedArray[[2]string]",
 	},
@@ -260,9 +260,9 @@ var GlobalCases = []struct {
 			[]types.Type{types.NewMap(types.Typ[types.Int], types.Typ[types.String])},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[map[int]string]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[map[int]string]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[map[int]string]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[map[int]string]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[map[int]string]",
 		"testdata.TypedArray[map[int]string]",
 	},
@@ -273,9 +273,9 @@ var GlobalCases = []struct {
 			[]types.Type{types.NewChan(types.SendRecv, g.TType(reflect.TypeFor[error]()))},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[chan error]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[chan error]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[chan error]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[chan error]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[chan error]",
 		"testdata.TypedArray[chan error]",
 	},
@@ -286,10 +286,10 @@ var GlobalCases = []struct {
 			[]types.Type{types.NewChan(types.SendOnly, tTestdataTagged)},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[chan<- github.com/xoctopus/typex/internal/testdata.Tagged]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[chan<- xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged]",
-		"github.com/xoctopus/typex/internal/testdata",
-		"TypedArray[chan<- github.com/xoctopus/typex/internal/testdata.Tagged]",
+		"github.com/xoctopus/typex/testdata.TypedArray[chan<- github.com/xoctopus/typex/testdata.Tagged]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[chan<- xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.Tagged]",
+		"github.com/xoctopus/typex/testdata",
+		"TypedArray[chan<- github.com/xoctopus/typex/testdata.Tagged]",
 		"testdata.TypedArray[chan<- testdata.Tagged]",
 	},
 	{
@@ -299,10 +299,10 @@ var GlobalCases = []struct {
 			[]types.Type{types.NewChan(types.RecvOnly, types.NewPointer(tTestdataTagged))},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[<-chan *github.com/xoctopus/typex/internal/testdata.Tagged]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[<-chan *xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged]",
-		"github.com/xoctopus/typex/internal/testdata",
-		"TypedArray[<-chan *github.com/xoctopus/typex/internal/testdata.Tagged]",
+		"github.com/xoctopus/typex/testdata.TypedArray[<-chan *github.com/xoctopus/typex/testdata.Tagged]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[<-chan *xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.Tagged]",
+		"github.com/xoctopus/typex/testdata",
+		"TypedArray[<-chan *github.com/xoctopus/typex/testdata.Tagged]",
 		"testdata.TypedArray[<-chan *testdata.Tagged]",
 	},
 	{
@@ -312,9 +312,9 @@ var GlobalCases = []struct {
 			[]types.Type{tEmptyStruct},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[struct {}]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[struct {}]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[struct {}]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[struct {}]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[struct {}]",
 		"testdata.TypedArray[struct {}]",
 	},
@@ -367,32 +367,32 @@ var GlobalCases = []struct {
 			)},
 			true,
 		)),
-		`github.com/xoctopus/typex/internal/testdata.TypedArray[struct { ` +
+		`github.com/xoctopus/typex/testdata.TypedArray[struct { ` +
 			`A string; ` +
 			`B int; ` +
-			`github.com/xoctopus/typex/internal/testdata.Map "json:\"esc''{}[]\\\"\""; ` +
-			`github.com/xoctopus/typex/internal/testdata.TypedSlice[net.Addr]; ` +
+			`github.com/xoctopus/typex/testdata.Map "json:\"esc''{}[]\\\"\""; ` +
+			`github.com/xoctopus/typex/testdata.TypedSlice[net.Addr]; ` +
 			`C struct { ` +
-			`github.com/xoctopus/typex/internal/testdata.TypedArray[struct { github.com/xoctopus/typex/internal/testdata.TypedSlice[net.Addr] }] ` +
+			`github.com/xoctopus/typex/testdata.TypedArray[struct { github.com/xoctopus/typex/testdata.TypedSlice[net.Addr] }] ` +
 			`} ` +
 			`}]`,
-		`xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[struct { ` +
+		`xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[struct { ` +
 			`A string; ` +
 			`B int; ` +
-			`xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Map "json:\"esc''{}[]\\\"\""; ` +
-			`xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedSlice[net.Addr]; ` +
+			`xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.Map "json:\"esc''{}[]\\\"\""; ` +
+			`xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedSlice[net.Addr]; ` +
 			`C struct { ` +
-			`xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[struct { xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedSlice[net.Addr] }] ` +
+			`xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[struct { xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedSlice[net.Addr] }] ` +
 			`} ` +
 			`}]`,
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata",
 		`TypedArray[struct { ` +
 			`A string; ` +
 			`B int; ` +
-			`github.com/xoctopus/typex/internal/testdata.Map "json:\"esc''{}[]\\\"\""; ` +
-			`github.com/xoctopus/typex/internal/testdata.TypedSlice[net.Addr]; ` +
+			`github.com/xoctopus/typex/testdata.Map "json:\"esc''{}[]\\\"\""; ` +
+			`github.com/xoctopus/typex/testdata.TypedSlice[net.Addr]; ` +
 			`C struct { ` +
-			`github.com/xoctopus/typex/internal/testdata.TypedArray[struct { github.com/xoctopus/typex/internal/testdata.TypedSlice[net.Addr] }] ` +
+			`github.com/xoctopus/typex/testdata.TypedArray[struct { github.com/xoctopus/typex/testdata.TypedSlice[net.Addr] }] ` +
 			`} ` +
 			`}]`,
 		`testdata.TypedArray[struct { ` +
@@ -412,9 +412,9 @@ var GlobalCases = []struct {
 			[]types.Type{types.NewInterfaceType(nil, nil)},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[interface {}]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[interface {}]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[interface {}]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[interface {}]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[interface {}]",
 		"testdata.TypedArray[interface {}]",
 	},
@@ -431,9 +431,9 @@ var GlobalCases = []struct {
 			[]types.Type{types.NewInterfaceType(nil, []types.Type{tFmtStringer, tIoReadCloser, tIoWriteCloser, tIoReadWriter})},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }]",
 		"testdata.TypedArray[interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }]",
 	},
@@ -444,9 +444,9 @@ var GlobalCases = []struct {
 			[]types.Type{types.NewSignatureType(nil, nil, nil, nil, nil, false)},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[func()]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[func()]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[func()]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[func()]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[func()]",
 		"testdata.TypedArray[func()]",
 	},
@@ -467,9 +467,9 @@ var GlobalCases = []struct {
 			)},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[func(interface {}, ...string) string]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[func(interface {}, ...string) string]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[func(interface {}, ...string) string]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[func(interface {}, ...string) string]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[func(interface {}, ...string) string]",
 		"testdata.TypedArray[func(interface {}, ...string) string]",
 	},
@@ -491,9 +491,9 @@ var GlobalCases = []struct {
 			)},
 			true,
 		)),
-		"github.com/xoctopus/typex/internal/testdata.TypedArray[func(interface {}, ...string) (string, error)]",
-		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[func(interface {}, ...string) (string, error)]",
-		"github.com/xoctopus/typex/internal/testdata",
+		"github.com/xoctopus/typex/testdata.TypedArray[func(interface {}, ...string) (string, error)]",
+		"xwrap_github_d_com_s_xoctopus_s_typex_s_testdata.TypedArray[func(interface {}, ...string) (string, error)]",
+		"github.com/xoctopus/typex/testdata",
 		"TypedArray[func(interface {}, ...string) (string, error)]",
 		"testdata.TypedArray[func(interface {}, ...string) (string, error)]",
 	},
@@ -514,7 +514,6 @@ func TestGlobal(t *testing.T) {
 	})
 	t.Run("Literalize", func(t *testing.T) {
 		for _, c := range GlobalCases {
-			t.Log(c.id)
 			if c.rt == nil {
 				NewWithT(t).Expect(c.tt).To(BeNil())
 				NewWithT(t).Expect(g.Literalize(c.rt)).To(BeNil())

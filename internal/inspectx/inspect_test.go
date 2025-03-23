@@ -11,7 +11,7 @@ import (
 
 	"github.com/xoctopus/typex/internal"
 	"github.com/xoctopus/typex/internal/inspectx"
-	"github.com/xoctopus/typex/internal/testdata"
+	"github.com/xoctopus/typex/testdata"
 )
 
 var rtyp = reflect.TypeFor[testdata.Structures]()
