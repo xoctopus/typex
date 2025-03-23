@@ -64,7 +64,7 @@ var GlobalCases = []struct {
 	{
 		reflect.TypeFor[any](),
 		types.NewInterfaceType(nil, nil),
-		"interface {}", "interface {}", "", "", "",
+		"interface {}", "interface {}", "", "", "interface {}",
 	},
 	{
 		reflect.TypeFor[rune](),
@@ -79,17 +79,17 @@ var GlobalCases = []struct {
 	{
 		reflect.TypeFor[[]int](),
 		types.NewSlice(types.Typ[types.Int]),
-		"[]int", "[]int", "", "", "",
+		"[]int", "[]int", "", "", "[]int",
 	},
 	{
 		reflect.TypeFor[[]byte](),
 		types.NewSlice(types.Typ[types.Byte]),
-		"[]uint8", "[]uint8", "", "", "",
+		"[]uint8", "[]uint8", "", "", "[]uint8",
 	},
 	{
 		reflect.TypeFor[[3]rune](),
 		types.NewArray(types.Typ[types.Rune], 3),
-		"[3]int32", "[3]int32", "", "", "",
+		"[3]int32", "[3]int32", "", "", "[3]int32",
 	},
 	{
 		reflect.TypeFor[[3]iter.Seq[int]](),
@@ -97,38 +97,41 @@ var GlobalCases = []struct {
 			nil, pkgx.MustLookup[*types.Named](pkgx.New("iter"), "Seq"),
 			[]types.Type{types.Typ[types.Int]}, true,
 		)), 3),
-		"[3]iter.Seq[int]", "[3]iter.Seq[int]", "", "", "",
+		"[3]iter.Seq[int]", "[3]iter.Seq[int]", "", "", "[3]iter.Seq[int]",
 	},
 	{
 		reflect.TypeFor[chan error](),
 		types.NewChan(types.SendRecv, g.TType(reflect.TypeFor[error]())),
-		"chan error", "chan error", "", "", "",
+		"chan error", "chan error", "", "", "chan error",
 	},
 	{
 		reflect.TypeFor[chan<- testdata.Tagged](),
 		types.NewChan(types.SendOnly, tTestdataTagged),
 		"chan<- github.com/xoctopus/typex/internal/testdata.Tagged",
 		"chan<- xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged",
-		"", "", "",
+		"", "",
+		"chan<- testdata.Tagged",
 	},
 	{
 		reflect.TypeFor[<-chan *testdata.Tagged](),
 		types.NewChan(types.RecvOnly, types.NewPointer(tTestdataTagged)),
 		"<-chan *github.com/xoctopus/typex/internal/testdata.Tagged",
 		"<-chan *xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged",
-		"", "", "",
+		"", "",
+		"<-chan *testdata.Tagged",
 	},
 	{
 		reflect.TypeFor[[]testdata.Tagged](),
 		types.NewSlice(tTestdataTagged),
 		"[]github.com/xoctopus/typex/internal/testdata.Tagged",
 		"[]xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged",
-		"", "", "",
+		"", "",
+		"[]testdata.Tagged",
 	},
 	{
 		reflect.TypeFor[func()](),
 		types.NewSignatureType(nil, nil, nil, nil, nil, false),
-		"func()", "func()", "", "", "",
+		"func()", "func()", "", "", "func()",
 	},
 	{
 		reflect.TypeFor[func(fmt.Stringer, ...any) net.Addr](),
@@ -143,7 +146,8 @@ var GlobalCases = []struct {
 		),
 		"func(fmt.Stringer, ...interface {}) net.Addr",
 		"func(fmt.Stringer, ...interface {}) net.Addr",
-		"", "", "",
+		"", "",
+		"func(fmt.Stringer, ...interface {}) net.Addr",
 	},
 	{
 		reflect.TypeFor[func(string, ...any) (string, error)](),
@@ -161,7 +165,8 @@ var GlobalCases = []struct {
 		),
 		"func(string, ...interface {}) (string, error)",
 		"func(string, ...interface {}) (string, error)",
-		"", "", "",
+		"", "",
+		"func(string, ...interface {}) (string, error)",
 	},
 	{
 		reflect.TypeFor[interface {
@@ -173,7 +178,8 @@ var GlobalCases = []struct {
 		types.NewInterfaceType(nil, []types.Type{tFmtStringer, tIoReadCloser, tIoWriteCloser, tIoReadWriter}),
 		"interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }",
 		"interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }",
-		"", "", "",
+		"", "",
+		"interface { Close() error; Read([]uint8) (int, error); String() string; Write([]uint8) (int, error) }",
 	},
 	{
 		reflect.TypeFor[testdata.TypedSliceAliasNetAddr](),
@@ -187,7 +193,7 @@ var GlobalCases = []struct {
 	{
 		reflect.TypeFor[struct{}](),
 		tEmptyStruct,
-		"struct {}", "struct {}", "", "", "",
+		"struct {}", "struct {}", "", "", "struct {}",
 	},
 	{
 		reflect.TypeFor[struct {
@@ -202,12 +208,13 @@ var GlobalCases = []struct {
 		}, []string{"", "", `json:"esc''{}[]\""`}),
 		`struct { A string; B int; github.com/xoctopus/typex/internal/testdata.Map "json:\"esc''{}[]\\\"\"" }`,
 		`struct { A string; B int; xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Map "json:\"esc''{}[]\\\"\"" }`,
-		"", "", "",
+		"", "",
+		`struct { A string; B int; testdata.Map "json:\"esc''{}[]\\\"\"" }`,
 	},
 	{
 		reflect.TypeFor[map[string]int](),
 		types.NewMap(types.Typ[types.String], types.Typ[types.Int]),
-		"map[string]int", "map[string]int", "", "", "",
+		"map[string]int", "map[string]int", "", "", "map[string]int",
 	},
 	{
 		reflect.TypeFor[testdata.PassTypeParam[int, net.Addr]](),
@@ -283,7 +290,7 @@ var GlobalCases = []struct {
 		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[chan<- xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged]",
 		"github.com/xoctopus/typex/internal/testdata",
 		"TypedArray[chan<- github.com/xoctopus/typex/internal/testdata.Tagged]",
-		"testdata.TypedArray[chan<- github.com/xoctopus/typex/internal/testdata.Tagged]",
+		"testdata.TypedArray[chan<- testdata.Tagged]",
 	},
 	{
 		reflect.TypeFor[testdata.TypedArray[<-chan *testdata.Tagged]](),
@@ -296,7 +303,7 @@ var GlobalCases = []struct {
 		"xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.TypedArray[<-chan *xwrap_github_d_com_s_xoctopus_s_typex_s_internal_s_testdata.Tagged]",
 		"github.com/xoctopus/typex/internal/testdata",
 		"TypedArray[<-chan *github.com/xoctopus/typex/internal/testdata.Tagged]",
-		"testdata.TypedArray[<-chan *github.com/xoctopus/typex/internal/testdata.Tagged]",
+		"testdata.TypedArray[<-chan *testdata.Tagged]",
 	},
 	{
 		reflect.TypeFor[testdata.TypedArray[struct{}]](),
@@ -391,10 +398,10 @@ var GlobalCases = []struct {
 		`testdata.TypedArray[struct { ` +
 			`A string; ` +
 			`B int; ` +
-			`github.com/xoctopus/typex/internal/testdata.Map "json:\"esc''{}[]\\\"\""; ` +
-			`github.com/xoctopus/typex/internal/testdata.TypedSlice[net.Addr]; ` +
+			`testdata.Map "json:\"esc''{}[]\\\"\""; ` +
+			`testdata.TypedSlice[net.Addr]; ` +
 			`C struct { ` +
-			`github.com/xoctopus/typex/internal/testdata.TypedArray[struct { github.com/xoctopus/typex/internal/testdata.TypedSlice[net.Addr] }] ` +
+			`testdata.TypedArray[struct { testdata.TypedSlice[net.Addr] }] ` +
 			`} ` +
 			`}]`,
 	},
@@ -507,6 +514,7 @@ func TestGlobal(t *testing.T) {
 	})
 	t.Run("Literalize", func(t *testing.T) {
 		for _, c := range GlobalCases {
+			t.Log(c.id)
 			if c.rt == nil {
 				NewWithT(t).Expect(c.tt).To(BeNil())
 				NewWithT(t).Expect(g.Literalize(c.rt)).To(BeNil())
@@ -520,7 +528,7 @@ func TestGlobal(t *testing.T) {
 			NewWithT(t).Expect(ur.String()).To(Equal(c.id))
 			NewWithT(t).Expect(ur.PkgPath()).To(Equal(c.pkg))
 			NewWithT(t).Expect(ur.Name()).To(Equal(c.name))
-			NewWithT(t).Expect(ur.Typename()).To(Equal(c.typename))
+			NewWithT(t).Expect(ur.TypeLit()).To(Equal(c.typename))
 
 			if builtin, ok := ur.(internal.Builtin); ok {
 				NewWithT(t).Expect(builtin.Kind()).To(Equal(c.rt.Kind()))

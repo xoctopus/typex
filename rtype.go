@@ -37,7 +37,7 @@ func (t *rtype) Alias() string {
 	return ""
 }
 
-func (t *rtype) Typename() string { return t.u.Typename() }
+func (t *rtype) TypeLit() string { return t.u.TypeLit() }
 
 func (t *rtype) Implements(u any) bool {
 	switch x := u.(type) {

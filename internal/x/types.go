@@ -13,7 +13,7 @@ type Type interface {
 	PkgPath() string
 	Name() string
 	String() string
-	Typename() string
+	TypeLit() string
 	Alias() string
 
 	Implements(any) bool

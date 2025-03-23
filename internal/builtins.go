@@ -158,11 +158,8 @@ func (t *builtin) String() string {
 	return t.typename
 }
 
-func (t *builtin) Typename() string {
-	if t.pkg != nil {
-		return t.pkg.Name() + "." + t.typename
-	}
-	return t.Name()
+func (t *builtin) TypeLit() string {
+	return t.String()
 }
 
 func (t *builtin) Alias() string {

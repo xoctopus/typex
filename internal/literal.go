@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/types"
@@ -17,10 +18,16 @@ import (
 )
 
 type Literal interface {
+	// PkgPath returns type's full package path
 	PkgPath() string
+	// Name returns type's name with type arguments
 	Name() string
+	// String return type's string with full package path everywhere
 	String() string
-	Typename() string
+	// TypeLit returns type's literal, it should be consistent with the literal
+	// representation shown in source code
+	TypeLit() string
+	// TType returns type's types.Type
 	TType() types.Type
 }
 
@@ -332,16 +339,103 @@ func (t utype) Name() string {
 	return ""
 }
 
-func (t utype) Typename() string {
-	name := t.Name()
-	if name == "" {
-		return ""
+func (t utype) TypeLit() string {
+	if t.pkg != nil {
+		must.BeTrue(t.typename != "")
+		b := strings.Builder{}
+		b.WriteString(t.pkg.Name())
+		b.WriteString(".")
+		b.WriteString(t.typename)
+
+		if len(t.targs) == 0 {
+			return b.String()
+		}
+		b.WriteString("[")
+		for i, targ := range t.targs {
+			if i > 0 {
+				b.WriteString(",")
+			}
+			b.WriteString(targ.TypeLit())
+		}
+		b.WriteString("]")
+		return b.String()
 	}
-	// if pkg == nil, treat as builtin type
-	// if t.pkg == nil {
-	// 	return name
-	// }
-	return t.pkg.Name() + "." + name
+
+	switch t.kind {
+	case reflect.Array:
+		return fmt.Sprintf("[%d]%s", t.len, t.elem.TypeLit())
+	case reflect.Chan:
+		return fmt.Sprintf("%s%s", t.dir.String(), t.elem.TypeLit())
+	case reflect.Func:
+		b := strings.Builder{}
+
+		name := "func"
+		if t.name != "" {
+			name = t.name
+		}
+		b.WriteString(name + "(")
+		for i := range t.ins {
+			if i > 0 {
+				b.WriteString(", ")
+			}
+			if i == len(t.ins)-1 && t.variadic {
+				b.WriteString("..." + t.ins[i].TypeLit()[2:])
+				break
+			}
+			b.WriteString(t.ins[i].TypeLit())
+		}
+		b.WriteString(")")
+
+		if len(t.outs) == 0 {
+			return b.String()
+		}
+		b.WriteString(" ")
+		if len(t.outs) > 1 {
+			b.WriteString("(")
+		}
+		for i, v := range t.outs {
+			if i > 0 {
+				b.WriteString(", ")
+			}
+			b.WriteString(v.TypeLit())
+		}
+		if len(t.outs) > 1 {
+			b.WriteString(")")
+		}
+		return b.String()
+	case reflect.Interface:
+		b := strings.Builder{}
+		b.WriteString("interface { ")
+		for i, m := range t.methods {
+			if i > 0 {
+				b.WriteString("; ")
+			}
+			b.WriteString(m.TypeLit())
+		}
+		b.WriteString(" }")
+		return b.String()
+	case reflect.Map:
+		return fmt.Sprintf("map[%s]%s", t.key.TypeLit(), t.elem.TypeLit())
+	case reflect.Pointer:
+		return fmt.Sprintf("*%s", t.elem.TypeLit())
+	case reflect.Slice:
+		return fmt.Sprintf("[]%s", t.elem.TypeLit())
+	default:
+		must.BeTrue(t.kind == reflect.Struct)
+		if len(t.fields) == 0 {
+			return "struct {}"
+		}
+		b := strings.Builder{}
+		b.WriteString("struct { ")
+		for i, f := range t.fields {
+			if i > 0 {
+				b.WriteString("; ")
+			}
+			b.WriteString(f.TypeLit())
+		}
+		b.WriteString(" }")
+		return b.String()
+	}
 }
 
 func (t utype) String() string {
@@ -511,6 +605,20 @@ type ufield struct {
 	typ      Literal
 	tag      string
 	embedded bool
+}
+
+func (v ufield) TypeLit() string {
+	b := strings.Builder{}
+	if !v.embedded {
+		b.WriteString(v.name)
+		b.WriteString(" ")
+	}
+	b.WriteString(v.typ.TypeLit())
+	if len(v.tag) > 0 {
+		b.WriteString(" ")
+		b.WriteString(strconv.Quote(v.tag))
+	}
+	return b.String()
 }
 
 func (v ufield) String() string {

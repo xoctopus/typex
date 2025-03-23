@@ -223,7 +223,7 @@ func (c *Case) Run(t *testing.T) {
 	})
 	t.Run("Literal", func(t *testing.T) {
 		NewWithT(t).Expect(c.rt.String()).To(Equal(c.tt.String()))
-		NewWithT(t).Expect(c.rt.Typename()).To(Equal(c.tt.Typename()))
+		NewWithT(t).Expect(c.rt.TypeLit()).To(Equal(c.tt.TypeLit()))
 		NewWithT(t).Expect(c.rt.Alias()).To(Equal(c.tt.Alias()))
 	})
 

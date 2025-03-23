@@ -79,7 +79,7 @@ func (t *ttype) Alias() string {
 	return ""
 }
 
-func (t *ttype) Typename() string { return t.u.Typename() }
+func (t *ttype) TypeLit() string { return t.u.TypeLit() }
 
 func (t *ttype) Implements(u any) bool {
 	switch x := u.(type) {
