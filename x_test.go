@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
-	"github.com/xoctopus/x/reflectx"
+	"github.com/xoctopus/x/misc/must"
 	"github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex"
@@ -19,7 +19,9 @@ var pkg = pkgx.New("github.com/xoctopus/typex/testdata")
 func init() {
 	testdata.RegisterInstantiations(
 		func(v any) typex.Type {
-			return typex.NewRType(reflectx.MustAssertType[reflect.Type](v))
+			t, ok := v.(reflect.Type)
+			must.BeTrue(ok)
+			return typex.NewRType(t)
 		},
 		typex.NewTType,
 	)

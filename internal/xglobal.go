@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/xoctopus/x/mapx"
-	"github.com/xoctopus/x/reflectx"
+	"github.com/xoctopus/x/misc/must"
 )
 
 func init() {
@@ -128,7 +128,8 @@ func (g *global) literalize(key any) Literal {
 	case reflect.Type:
 		u = literalizeRT(k)
 	default:
-		t := reflectx.MustAssertType[types.Type](key)
+		t, ok := key.(types.Type)
+		must.BeTrueWrap(ok, "expect reflect.Type or types.Type")
 		u = literalizeTT(t)
 	}
 

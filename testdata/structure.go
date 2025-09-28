@@ -3,8 +3,6 @@ package testdata
 import (
 	"fmt"
 	"net"
-
-	"github.com/xoctopus/x/reflectx"
 )
 
 type Tagged struct {
@@ -33,7 +31,7 @@ func (v Serialized[T]) String() string {
 	case []byte:
 		return string(data)
 	default:
-		return reflectx.MustAssertType[string](data)
+		return data.(string)
 	}
 }
 
@@ -42,7 +40,7 @@ func (v Serialized[T]) Bytes() []byte {
 	case string:
 		return []byte(data)
 	default:
-		return reflectx.MustAssertType[[]byte](data)
+		return data.([]byte)
 	}
 }
 

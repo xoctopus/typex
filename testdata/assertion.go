@@ -297,7 +297,7 @@ func (c *Case) Run(t *testing.T) {
 	})
 
 	t.Run("Elem", func(t *testing.T) {
-		if reflectx.CanElem(c.r.Kind()) {
+		if reflectx.CanElem(c.r) {
 			NewWithT(t).Expect(c.rt.Elem().String()).To(Equal(c.tt.Elem().String()))
 		} else {
 			NewWithT(t).Expect(c.rt.Elem()).To(BeNil())

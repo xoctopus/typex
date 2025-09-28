@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
-	"github.com/xoctopus/x/reflectx"
+	"github.com/xoctopus/x/misc/must"
 
 	"github.com/xoctopus/typex/internal"
 	"github.com/xoctopus/typex/internal/gtypex"
@@ -61,7 +61,8 @@ func (t *ttype) Kind() reflect.Kind {
 	case *types.Signature:
 		return reflect.Func
 	default:
-		x = reflectx.MustAssertType[*types.Named](t.t)
+		x, ok := t.t.(*types.Named)
+		must.BeTrue(ok)
 		return NewTType(x.Underlying()).Kind()
 	}
 }

@@ -94,7 +94,7 @@ func (t *rtype) Key() Type {
 }
 
 func (t *rtype) Elem() Type {
-	if reflectx.CanElem(t.t.Kind()) {
+	if reflectx.CanElem(t.t) {
 		return NewRType(t.t.Elem())
 	}
 	return nil
