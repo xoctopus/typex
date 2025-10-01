@@ -54,9 +54,10 @@ func TestNewChanDir(t *testing.T) {
 	}
 
 	t.Run("InvalidInput", func(t *testing.T) {
-		defer func() {
-			testx.AssertRecoverContains(t, recover(), "invalid dir type")
-		}()
-		internal.NewChanDir(1)
+		testx.ExpectPanic(
+			t,
+			func() { internal.NewChanDir(1) },
+			testx.ErrorContains("invalid dir type"),
+		)
 	})
 }

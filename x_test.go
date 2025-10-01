@@ -40,29 +40,34 @@ func TestNewTType(t *testing.T) {
 	})
 	t.Run("InvalidInput", func(t *testing.T) {
 		t.Run("Union", func(t *testing.T) {
-			defer func() {
-				testx.AssertRecoverEqual(t, recover(), "invalid NewTType by types.Type for `*types.Union`")
-			}()
 			tt := pkgx.MustLookup[*types.Named](pkg, "Float").Underlying().(*types.Interface).EmbeddedType(0)
-			typex.NewTType(tt)
+			testx.ExpectPanic[error](
+				t,
+				func() { typex.NewTType(tt) },
+				testx.ErrorEqual("invalid NewTType by types.Type for `*types.Union`"),
+			)
 		})
 		t.Run("Tuple", func(t *testing.T) {
-			defer func() {
-				testx.AssertRecoverEqual(t, recover(), "invalid NewTType by types.Type for `*types.Tuple`")
-			}()
 			tt := pkgx.MustLookup[*types.Named](pkg, "Compare").Underlying().(*types.Signature).Results()
-			typex.NewTType(tt)
+			testx.ExpectPanic[error](
+				t,
+				func() { typex.NewTType(tt) },
+				testx.ErrorEqual("invalid NewTType by types.Type for `*types.Tuple`"),
+			)
 		})
 		t.Run("TypeParam", func(t *testing.T) {
-			defer func() {
-				testx.AssertRecoverEqual(t, recover(), "invalid NewTType by types.Type for `*types.TypeParam`")
-			}()
 			tt := pkgx.MustLookup[*types.Named](pkg, "BTreeNode").TypeParams().At(0)
-			typex.NewTType(tt)
+			testx.ExpectPanic[error](
+				t,
+				func() { typex.NewTType(tt) },
+				testx.ErrorEqual("invalid NewTType by types.Type for `*types.TypeParam`"),
+			)
 		})
-		defer func() {
-			testx.AssertRecoverEqual(t, recover(), "invalid NewTType type `int`")
-		}()
-		typex.NewTType(1)
+
+		testx.ExpectPanic[error](
+			t,
+			func() { typex.NewTType(1) },
+			testx.ErrorEqual("invalid NewTType type `int`"),
+		)
 	})
 }

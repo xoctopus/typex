@@ -506,10 +506,11 @@ func TestGlobal(t *testing.T) {
 			NewWithT(t).Expect(g.Wrap(c.tt)).To(Equal(c.wrapped))
 		}
 		t.Run("InvalidInput", func(t *testing.T) {
-			defer func() {
-				testx.AssertRecoverContains(t, recover(), "invalid wrap key type")
-			}()
-			_ = g.Wrap("")
+			testx.ExpectPanic(
+				t,
+				func() { _ = g.Wrap("") },
+				testx.ErrorContains("invalid wrap key type"),
+			)
 		})
 	})
 	t.Run("Literalize", func(t *testing.T) {
@@ -534,10 +535,11 @@ func TestGlobal(t *testing.T) {
 			}
 		}
 		t.Run("InvalidInput", func(t *testing.T) {
-			defer func() {
-				testx.AssertRecoverContains(t, recover(), "invalid literalize key type")
-			}()
-			_ = g.Literalize("")
+			testx.ExpectPanic(
+				t,
+				func() { _ = g.Literalize("") },
+				testx.ErrorContains("invalid literalize key type"),
+			)
 		})
 	})
 	t.Run("TType", func(t *testing.T) {
@@ -551,10 +553,11 @@ func TestGlobal(t *testing.T) {
 			NewWithT(t).Expect(identical).To(BeTrue())
 		}
 		t.Run("InvalidInput", func(t *testing.T) {
-			defer func() {
-				testx.AssertRecoverContains(t, recover(), "invalid ttype key type")
-			}()
-			_ = g.TType("")
+			testx.ExpectPanic(
+				t,
+				func() { _ = g.TType("") },
+				testx.ErrorContains("invalid ttype key type"),
+			)
 		})
 	})
 }

@@ -83,20 +83,22 @@ func TestLookup(t *testing.T) {
 	NewWithT(t).Expect(named.Obj().Name()).To(Equal("Named"))
 
 	t.Run("ObjectNotFound", func(t *testing.T) {
-		defer func() {
-			testx.AssertRecoverContains(t, recover(), "object `Undefined` not found")
-		}()
-		MustLookup[*types.Named](p, "Undefined")
+		testx.ExpectPanic[error](
+			t,
+			func() { MustLookup[*types.Named](p, "Undefined") },
+			testx.ErrorContains("object `Undefined` not found"),
+		)
 	})
 
 	_, exists = Lookup[*types.Named](p, "Alias")
 	NewWithT(t).Expect(exists).To(BeFalse())
 
 	t.Run("TypeUnmatched", func(t *testing.T) {
-		defer func() {
-			testx.AssertRecoverEqual(t, recover(), "object `Alias` is not a *types.Named type")
-		}()
-		MustLookup[*types.Named](p, "Alias")
+		testx.ExpectPanic[error](
+			t,
+			func() { MustLookup[*types.Named](p, "Alias") },
+			testx.ErrorEqual("object `Alias` is not a *types.Named type"),
+		)
 	})
 
 	alias := MustLookup[*types.Alias](p, "Alias")
