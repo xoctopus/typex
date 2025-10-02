@@ -23,6 +23,8 @@ github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjR
 github.com/rogpeppe/go-internal v1.10.0/go.mod h1:UQnix2H7Ngw/k4C5ijL5+65zddjncjaFoBhdsK/akog=
 github.com/xoctopus/x v0.1.3-0.20251001122425-e2f8a969caa2 h1:o6RRo/Z9OlIkjnQ68AexRdC1JA6q30Y7vRxAcbbmbJM=
 github.com/xoctopus/x v0.1.3-0.20251001122425-e2f8a969caa2/go.mod h1:vvadcr2OJABYvjLVG3oUV9Bz3N5Uumd7gRTaEgvgQTg=
+github.com/xoctopus/x v0.1.3-0.20251002123523-c93a061288e1 h1:bt3Sw/IumzzqSUXUi8XfCsCackcKnYly8y72wECrz7E=
+github.com/xoctopus/x v0.1.3-0.20251002123523-c93a061288e1/go.mod h1:vvadcr2OJABYvjLVG3oUV9Bz3N5Uumd7gRTaEgvgQTg=
 go.uber.org/automaxprocs v1.6.0 h1:O3y2/QNTOdbF+e/dpXNNW7Rx2hZ4sTIPyybbxyNqTUs=
 go.uber.org/automaxprocs v1.6.0/go.mod h1:ifeIMSnPZuznNm6jmdzmU3/bfk01Fe2fotchwEFJ8r8=
 go.yaml.in/yaml/v3 v3.0.4 h1:tfq32ie2Jv2UxXFdLJdh3jXuOzWiL1fo0bu/FbuKpbc=

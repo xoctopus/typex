@@ -11,7 +11,7 @@ import (
 )
 
 func NewRType(t reflect.Type) Type {
-	must.NotNilWrap(t, "invalid reflect.Type")
+	must.NotNilF(t, "invalid reflect.Type")
 	return &rtype{t: t, u: internal.Global().Literalize(t)}
 }
 

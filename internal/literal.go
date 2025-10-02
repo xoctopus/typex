@@ -132,7 +132,7 @@ func literalize(id string) Literal {
 		return u
 	default:
 		ex, ok := e.(*ast.IndexListExpr)
-		must.BeTrueWrap(ok, "unexpected expr [%T] %s", e, ident(id, e))
+		must.BeTrueF(ok, "unexpected expr [%T] %s", e, ident(id, e))
 		u := g.literalize(ident(id, ex.X)).(utype)
 		u.targs = make([]Literal, len(ex.Indices))
 		for i, index := range ex.Indices {
@@ -281,7 +281,7 @@ func literalizeTT(t types.Type) Literal {
 		}
 	default:
 		xx, ok := t.(*types.Named)
-		must.BeTrueWrap(ok, "")
+		must.BeTrueF(ok, "")
 		u := utype{
 			pkg:      pkgx.NewT(xx.Obj().Pkg()),
 			typename: xx.Obj().Name(),

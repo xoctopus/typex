@@ -233,7 +233,7 @@ func wrapRT(t reflect.Type) string {
 	case reflect.Slice:
 		return "[]" + g.wrap(t.Elem())
 	default:
-		must.BeTrueWrap(t.Kind() == reflect.Struct, "unexpected kind %s", t.Kind())
+		must.BeTrueF(t.Kind() == reflect.Struct, "unexpected kind %s", t.Kind())
 		if t.NumField() == 0 {
 			return "struct {}"
 		}
@@ -365,11 +365,11 @@ func wrapTT(t types.Type) string {
 		return b.String()
 	default:
 		n, ok := t.(*types.Named)
-		must.BeTrueWrap(ok, "invalid WrapT type: %T", x)
+		must.BeTrueF(ok, "invalid WrapT type: %T", x)
 		ok = n.TypeArgs().Len() == n.TypeParams().Len()
-		must.BeTrueWrap(ok, "uninstantiated generic type: %s", x.String())
+		must.BeTrueF(ok, "uninstantiated generic type: %s", x.String())
 		ok = n.Obj().Pkg() != nil
-		must.BeTrueWrap(ok, "unexpect nil package type: %s", x.String())
+		must.BeTrueF(ok, "unexpect nil package type: %s", x.String())
 		b := strings.Builder{}
 		b.WriteString(n.Obj().Pkg().Path())
 		b.WriteString(".")

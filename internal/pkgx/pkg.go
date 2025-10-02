@@ -23,9 +23,9 @@ func Load(path string) *types.Package {
 
 	pkgs, err := packages.Load(&packages.Config{Tests: true, Mode: DefaultLoadMode}, path)
 	msg := "failed to load packages from %s"
-	must.NoErrorWrap(err, msg, path)
-	must.BeTrueWrap(len(pkgs) > 0, msg, path)
-	must.BeTrueWrap(len(pkgs[0].Errors) == 0, msg, path)
+	must.NoErrorF(err, msg, path)
+	must.BeTrueF(len(pkgs) > 0, msg, path)
+	must.BeTrueF(len(pkgs[0].Errors) == 0, msg, path)
 
 	var pkg *types.Package
 	for i := range pkgs {

@@ -129,7 +129,7 @@ func (g *global) literalize(key any) Literal {
 		u = literalizeRT(k)
 	default:
 		t, ok := key.(types.Type)
-		must.BeTrueWrap(ok, "expect reflect.Type or types.Type")
+		must.BeTrueF(ok, "expect reflect.Type or types.Type")
 		u = literalizeTT(t)
 	}
 

@@ -18,7 +18,7 @@ var brackets = map[rune]rune{
 // of brackets
 func Bracketed(id string, identifier0 rune) (string, int, int) {
 	identifier1, ok := brackets[identifier0]
-	must.BeTrueWrap(ok, "invalid bracket identifier: %v", identifier0)
+	must.BeTrueF(ok, "invalid bracket identifier: %v", identifier0)
 
 	l, r, embeds, quoted := -1, -1, 0, false
 End:

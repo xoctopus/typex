@@ -5,7 +5,7 @@ go 1.25.1
 require (
 	github.com/onsi/gomega v1.38.2
 	github.com/pkg/errors v0.9.1
-	github.com/xoctopus/x v0.1.3-0.20251001122425-e2f8a969caa2
+	github.com/xoctopus/x v0.1.3-0.20251002123523-c93a061288e1
 	golang.org/x/tools v0.37.0
 )
 
