@@ -58,25 +58,26 @@ End:
 
 // quoted returns the quoted sub string and quoter indexes.
 func quoted(id string) (string, int, int) {
-	quoted, l, r := false, -1, -1
-	for i, c := range id {
+	entered, l, r := false, -1, -1
+	for i := 0; i < len(id); i++ {
+		c := rune(id[i])
 		if i < len(id)-1 && id[i+1] == '\\' {
-			i += 2
+			i += 1
 			continue
 		}
 		if c == '"' {
-			if !quoted && l < 0 {
-				quoted = true
+			if !entered && l < 0 {
+				entered = true
 				l = i
 				continue
 			}
-			if quoted && l >= 0 {
+			if entered && l >= 0 {
 				r = i
 				break
 			}
 		}
 	}
-	return id[l+1 : r], l, r
+	return id[l : r+1], l, r
 }
 
 // Separate separates id by `sep`, unlike strings.Split, it will ignore `sep` within
@@ -170,7 +171,8 @@ func FieldInfo(id string) (name string, typ string, tag string) {
 
 		_tag, ql, qr := quoted(id)
 		must.BeTrue(ql >= 0 && qr > 0)
-		_tag = "\"" + reverse(_tag) + "\""
+		// _tag = "\"" + reverse(_tag) + "\""
+		_tag = reverse(_tag)
 		_tag, err := strconv.Unquote(_tag)
 		must.NoError(err)
 		tag = _tag

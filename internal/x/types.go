@@ -14,7 +14,6 @@ type Type interface {
 	Name() string
 	String() string
 	TypeLit() string
-	Alias() string
 
 	Implements(any) bool
 	AssignableTo(any) bool

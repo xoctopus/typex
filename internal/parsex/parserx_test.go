@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/onsi/gomega"
 	"github.com/xoctopus/x/resultx"
+	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex/internal/parsex"
 )
@@ -59,12 +59,12 @@ func TestBracketedAndSeparate(t *testing.T) {
 	for _, c := range cases {
 		sub, l, r := parsex.Bracketed(c.id, c.bracket)
 		parts := parsex.Separate(sub, c.sep)
-		NewWithT(t).Expect(parts).To(Equal(c.parts))
+		Expect(t, parts, Equal(c.parts))
 		if sub != "" {
-			NewWithT(t).Expect(c.id[l+1 : r]).To(Equal(sub))
+			Expect(t, c.id[l+1:r], Equal(sub))
 		} else {
-			NewWithT(t).Expect(l).To(Equal(-1))
-			NewWithT(t).Expect(r).To(Equal(-1))
+			Expect(t, l, Equal(-1))
+			Expect(t, r, Equal(-1))
 		}
 	}
 }
@@ -72,10 +72,10 @@ func TestBracketedAndSeparate(t *testing.T) {
 type TT[T any] struct{}
 
 func Example_structInTypeArguments() {
-	t1 := reflect.TypeOf(TT[struct {
-		string  // unexported field
-		TT[int] // embedded generic type field
-	}]{})
+	t1 := reflect.TypeFor[TT[struct {
+		string             // unexported field
+		TT[int] `json:"x"` // embedded generic type field and has tag
+	}]]()
 	fmt.Println(t1.String())
 
 	targs0 := resultx.ResultsOf(parsex.Bracketed(t1.String(), '[')).At(0).(string)
@@ -87,9 +87,9 @@ func Example_structInTypeArguments() {
 	}
 
 	// Output:
-	// parsex_test.TT[struct { github.com/xoctopus/typex/internal/parsex_test.string = string; TT = github.com/xoctopus/typex/internal/parsex_test.TT[int] }]
+	// parsex_test.TT[struct { github.com/xoctopus/typex/internal/parsex_test.string = string; TT = github.com/xoctopus/typex/internal/parsex_test.TT[int] "json:\"x\"" }]
 	// field0: name=;type=string;tag=
-	// field1: name=;type=github.com/xoctopus/typex/internal/parsex_test.TT[int];tag=
+	// field1: name=;type=github.com/xoctopus/typex/internal/parsex_test.TT[int];tag=json:"x"
 }
 
 func TestFieldInfo(t *testing.T) {
@@ -121,9 +121,9 @@ func TestFieldInfo(t *testing.T) {
 
 		for i, f := range parsex.Separate(fields, ';') {
 			name, typ, tag := parsex.FieldInfo(f)
-			NewWithT(t).Expect(name).To(Equal(expects[i][0]))
-			NewWithT(t).Expect(typ).To(Equal(expects[i][1]))
-			NewWithT(t).Expect(tag).To(Equal(expects[i][2]))
+			Expect(t, name, Equal(expects[i][0]))
+			Expect(t, typ, Equal(expects[i][1]))
+			Expect(t, tag, Equal(expects[i][2]))
 		}
 	})
 	t.Run("Struct", func(t *testing.T) {
@@ -151,9 +151,9 @@ func TestFieldInfo(t *testing.T) {
 
 		for i, f := range parsex.Separate(fields, ';') {
 			name, typ, tag := parsex.FieldInfo(f)
-			NewWithT(t).Expect(name).To(Equal(expects[i][0]))
-			NewWithT(t).Expect(typ).To(Equal(expects[i][1]))
-			NewWithT(t).Expect(tag).To(Equal(expects[i][2]))
+			Expect(t, name, Equal(expects[i][0]))
+			Expect(t, typ, Equal(expects[i][1]))
+			Expect(t, tag, Equal(expects[i][2]))
 		}
 	})
 }

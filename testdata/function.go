@@ -6,14 +6,14 @@ import (
 )
 
 type (
-	Func1                          func()
-	Func2                          func(string) Int
-	Func3                          func(x, y string, z ...int) (Boolean, error)
-	Curry                          func(x String, y ...fmt.Stringer) func() string
-	Max[T comparable]              func(...T) T
-	Contains[S ~[]E, E comparable] func(s S, v E) bool
-	ContainsFunc[S ~[]E, E any]    func(s S, f func(E) bool) bool
-	Compare[T cmp.Ordered]         func(x, y T) T
+	Func1                           func()
+	Func2                           func(string) Int
+	Func3                           func(x, y string, z ...int) (Boolean, error)
+	Curry                           func(x String, y ...fmt.Stringer) func() string
+	Max[T comparable]               func(...T) T
+	_Contains[S ~[]E, E comparable] func(s S, v E) bool
+	ContainsFunc[S ~[]E, E any]     func(s S, f func(E) bool) bool
+	Compare[T cmp.Ordered]          func(x, y T) T
 )
 
 type Functions struct {

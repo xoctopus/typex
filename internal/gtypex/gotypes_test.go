@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/onsi/gomega"
+	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex/internal"
 	"github.com/xoctopus/typex/internal/gtypex"
@@ -43,7 +43,7 @@ func TestUnderlying(t *testing.T) {
 			types.NewSlice(types.Typ[types.Int]),                // slice
 		} {
 			underlying := gtypex.Underlying(v)
-			NewWithT(t).Expect(types.Identical(underlying, v)).To(BeTrue())
+			Expect(t, types.Identical(underlying, v), BeTrue())
 		}
 	})
 
@@ -55,7 +55,6 @@ func TestUnderlying(t *testing.T) {
 		underlyingInst := gtypex.Underlying(
 			internal.Global().TType(reflect.TypeFor[Generic[int]]()),
 		)
-		// NewWithT(t).Expect(types.Identical(instUnderlying, underlyingInst)).To(BeTrue())
-		NewWithT(t).Expect(instUnderlying.String()).To(Equal(underlyingInst.String()))
+		Expect(t, instUnderlying.String(), Equal(underlyingInst.String()))
 	})
 }

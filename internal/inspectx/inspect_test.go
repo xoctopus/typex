@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/onsi/gomega"
 	"github.com/xoctopus/x/ptrx"
+	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex/internal"
 	"github.com/xoctopus/typex/internal/inspectx"
@@ -18,10 +18,10 @@ var rtyp = reflect.TypeFor[testdata.Structures]()
 
 func runner(t *testing.T, rt reflect.Type, tt types.Type) {
 	methods := inspectx.InspectMethods(tt)
-	NewWithT(t).Expect(len(methods)).To(Equal(rt.NumMethod()))
+	Expect(t, rt.NumMethod(), Equal(len(methods)))
 
 	for mi, m := range methods {
-		NewWithT(t).Expect(m.Name()).To(Equal(rt.Method(mi).Name))
+		Expect(t, m.Name(), Equal(rt.Method(mi).Name))
 	}
 }
 
@@ -44,9 +44,9 @@ func TestInspectMethods(t *testing.T) {
 
 	t.Run("MultiLevelPointer", func(t *testing.T) {
 		tt := internal.Global().TType(reflect.TypeFor[**testdata.UnambiguousL1AndL2x2]())
-		NewWithT(t).Expect(len(inspectx.InspectMethods(tt))).To(Equal(0))
+		Expect(t, len(inspectx.InspectMethods(tt)), Equal(0))
 		tt = internal.Global().TType(reflect.TypeFor[*error]())
-		NewWithT(t).Expect(len(inspectx.InspectMethods(tt))).To(Equal(0))
+		Expect(t, len(inspectx.InspectMethods(tt)), Equal(0))
 	})
 }
 
@@ -63,20 +63,20 @@ func TestInspectField(t *testing.T) {
 				tt := internal.Global().TType(rti)
 
 				tf := inspectx.FieldByName(tt, fj.Name)
-				NewWithT(t).Expect(tf.Var().Name()).To(Equal(fj.Name))
-				NewWithT(t).Expect(tf.Tag()).To(Equal(string(fj.Tag)))
+				Expect(t, tf.Var().Name(), Equal(fj.Name))
+				Expect(t, tf.Tag(), Equal(string(fj.Tag)))
 
 				tf = inspectx.FieldByNameFunc(tt, func(s string) bool { return true })
 				if rti.NumField() > 1 {
-					NewWithT(t).Expect(tf).To(BeNil())
+					Expect(t, tf, BeNil[*inspectx.Field]())
 				}
 
 				tf = inspectx.FieldByNameFunc(tt, func(v string) bool { return v == fj.Name })
-				NewWithT(t).Expect(tf.Var().Name()).To(Equal(fj.Name))
-				NewWithT(t).Expect(tf.Tag()).To(Equal(string(fj.Tag)))
+				Expect(t, tf.Var().Name(), Equal(fj.Name))
+				Expect(t, tf.Tag(), Equal(string(fj.Tag)))
 
 				tf = inspectx.FieldByName(types.NewPointer(tt), "any")
-				NewWithT(t).Expect(tf).To(BeNil())
+				Expect(t, tf, BeNil[*inspectx.Field]())
 			}
 		})
 	}

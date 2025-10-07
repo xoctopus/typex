@@ -20,24 +20,29 @@ type rtype struct {
 	u internal.Literal
 }
 
-func (t *rtype) Unwrap() any { return t.t }
-
-func (t *rtype) Kind() reflect.Kind { return t.t.Kind() }
-
-func (t *rtype) PkgPath() string { return t.t.PkgPath() }
-
-func (t *rtype) Name() string { return t.t.Name() }
-
-func (t *rtype) String() string { return t.u.String() }
-
-func (t *rtype) Alias() string {
-	if x, ok := t.u.(internal.Builtin); ok {
-		return x.Alias()
-	}
-	return ""
+func (t *rtype) Unwrap() any {
+	return t.t
 }
 
-func (t *rtype) TypeLit() string { return t.u.TypeLit() }
+func (t *rtype) Kind() reflect.Kind {
+	return t.t.Kind()
+}
+
+func (t *rtype) PkgPath() string {
+	return t.t.PkgPath()
+}
+
+func (t *rtype) Name() string {
+	return t.t.Name()
+}
+
+func (t *rtype) String() string {
+	return t.u.String()
+}
+
+func (t *rtype) TypeLit() string {
+	return t.u.TypeLit()
+}
 
 func (t *rtype) Implements(u any) bool {
 	switch x := u.(type) {

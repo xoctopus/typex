@@ -4,8 +4,7 @@ import (
 	"go/types"
 	"testing"
 
-	. "github.com/onsi/gomega"
-	"github.com/xoctopus/x/testx"
+	. "github.com/xoctopus/x/testx"
 
 	. "github.com/xoctopus/typex/internal/pkgx"
 )
@@ -57,13 +56,13 @@ func TestNewPackage(t *testing.T) {
 
 	for _, c := range cases {
 		p := New(c.path)
-		NewWithT(t).Expect(p.Name()).To(Equal(c.name))
-		NewWithT(t).Expect(p.Path()).To(Equal(c.pkg))
-		NewWithT(t).Expect(p.Unwrap().Path()).To(Equal(c.pkg))
-		NewWithT(t).Expect(p.ID()).To(Equal(c.id))
+		Expect(t, p.Name(), Equal(c.name))
+		Expect(t, p.Path(), Equal(c.pkg))
+		Expect(t, p.Unwrap().Path(), Equal(c.pkg))
+		Expect(t, p.ID(), Equal(c.id))
 	}
-	NewWithT(t).Expect(New("")).To(BeNil())
-	NewWithT(t).Expect(NewT(nil)).To(BeNil())
+	Expect(t, New(""), BeNil[Package]())
+	Expect(t, NewT(nil), BeNil[Package]())
 }
 
 type (
@@ -75,50 +74,50 @@ func TestLookup(t *testing.T) {
 	path := "github.com/xoctopus/typex/internal/pkgx_test"
 	p := NewT(types.NewPackage(path, "pkgx_test"))
 
-	named, exists := Lookup[*types.Named](p, "Undefined")
-	NewWithT(t).Expect(exists).To(BeFalse())
+	_, exists := Lookup[*types.Named](p, "Undefined")
+	Expect(t, exists, BeFalse())
 
-	named, exists = Lookup[*types.Named](p, "Named")
-	NewWithT(t).Expect(exists).To(BeTrue())
-	NewWithT(t).Expect(named.Obj().Name()).To(Equal("Named"))
+	named, exists := Lookup[*types.Named](p, "Named")
+	Expect(t, exists, BeTrue())
+	Expect(t, named.Obj().Name(), Equal("Named"))
 
 	t.Run("ObjectNotFound", func(t *testing.T) {
-		testx.ExpectPanic[error](
+		ExpectPanic[error](
 			t,
 			func() { MustLookup[*types.Named](p, "Undefined") },
-			testx.ErrorContains("object `Undefined` not found"),
+			ErrorContains("object `Undefined` not found"),
 		)
 	})
 
 	_, exists = Lookup[*types.Named](p, "Alias")
-	NewWithT(t).Expect(exists).To(BeFalse())
+	Expect(t, exists, BeFalse())
 
 	t.Run("TypeUnmatched", func(t *testing.T) {
-		testx.ExpectPanic[error](
+		ExpectPanic[error](
 			t,
 			func() { MustLookup[*types.Named](p, "Alias") },
-			testx.ErrorEqual("object `Alias` is not a *types.Named type"),
+			ErrorEqual("object `Alias` is not a *types.Named type"),
 		)
 	})
 
 	alias := MustLookup[*types.Alias](p, "Alias")
-	NewWithT(t).Expect(types.Identical(alias, named)).To(BeTrue())
+	Expect(t, types.Identical(alias, named), BeTrue())
 
 	named, exists = LookupByPath[*types.Named](path, "Named")
-	NewWithT(t).Expect(exists).To(BeTrue())
+	Expect(t, exists, BeTrue())
 	alias = MustLookupByPath[*types.Alias](path, "Alias")
-	NewWithT(t).Expect(types.Identical(types.Unalias(alias), named)).To(BeTrue())
+	Expect(t, types.Identical(types.Unalias(alias), named), BeTrue())
 
 }
 
 func TestLoad(t *testing.T) {
 	path := "github.com/xoctopus/typex/internal/pkgx"
 	pkg := Load(path)
-	NewWithT(t).Expect(pkg.Path()).To(Equal(path))
+	Expect(t, pkg.Path(), Equal(path))
 
 	path = "github.com/xoctopus/typex/internal/pkgx_test"
 	pkg = Load(path)
-	NewWithT(t).Expect(pkg.Path()).To(Equal(path))
+	Expect(t, pkg.Path(), Equal(path))
 
-	NewWithT(t).Expect(pkg.Scope().Lookup("TestLoad")).NotTo(BeNil())
+	Expect(t, pkg.Scope().Lookup("TestLoad"), NotBeNil[types.Object]())
 }

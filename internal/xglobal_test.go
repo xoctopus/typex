@@ -10,9 +10,8 @@ import (
 	"testing"
 	"unsafe"
 
-	. "github.com/onsi/gomega"
 	"github.com/xoctopus/x/resultx"
-	"github.com/xoctopus/x/testx"
+	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex/internal"
 	"github.com/xoctopus/typex/internal/pkgx"
@@ -502,43 +501,43 @@ var GlobalCases = []struct {
 func TestGlobal(t *testing.T) {
 	t.Run("Wrap", func(t *testing.T) {
 		for _, c := range GlobalCases {
-			NewWithT(t).Expect(g.Wrap(c.rt)).To(Equal(c.wrapped))
-			NewWithT(t).Expect(g.Wrap(c.tt)).To(Equal(c.wrapped))
+			Expect(t, g.Wrap(c.rt), Equal(c.wrapped))
+			Expect(t, g.Wrap(c.tt), Equal(c.wrapped))
 		}
 		t.Run("InvalidInput", func(t *testing.T) {
-			testx.ExpectPanic(
+			ExpectPanic(
 				t,
 				func() { _ = g.Wrap("") },
-				testx.ErrorContains("invalid wrap key type"),
+				ErrorContains("invalid wrap key type"),
 			)
 		})
 	})
 	t.Run("Literalize", func(t *testing.T) {
 		for _, c := range GlobalCases {
 			if c.rt == nil {
-				NewWithT(t).Expect(c.tt).To(BeNil())
-				NewWithT(t).Expect(g.Literalize(c.rt)).To(BeNil())
-				NewWithT(t).Expect(g.Literalize(c.rt)).To(BeNil())
+				Expect(t, c.tt, BeNil[types.Type]())
+				Expect(t, g.Literalize(c.rt), BeNil[internal.Literal]())
+				Expect(t, g.Literalize(c.rt), BeNil[internal.Literal]())
 				continue
 			}
 			ur := g.Literalize(c.rt)
 			ut := g.Literalize(c.tt)
 
-			NewWithT(t).Expect(reflect.DeepEqual(ur, ut)).To(BeTrue())
-			NewWithT(t).Expect(ur.String()).To(Equal(c.id))
-			NewWithT(t).Expect(ur.PkgPath()).To(Equal(c.pkg))
-			NewWithT(t).Expect(ur.Name()).To(Equal(c.name))
-			NewWithT(t).Expect(ur.TypeLit()).To(Equal(c.typename))
+			Expect(t, reflect.DeepEqual(ur, ut), BeTrue())
+			Expect(t, ur.String(), Equal(c.id))
+			Expect(t, ur.PkgPath(), Equal(c.pkg))
+			Expect(t, ur.Name(), Equal(c.name))
+			Expect(t, ur.TypeLit(), Equal(c.typename))
 
 			if builtin, ok := ur.(internal.Builtin); ok {
-				NewWithT(t).Expect(builtin.Kind()).To(Equal(c.rt.Kind()))
+				Expect(t, builtin.Kind(), Equal(c.rt.Kind()))
 			}
 		}
 		t.Run("InvalidInput", func(t *testing.T) {
-			testx.ExpectPanic(
+			ExpectPanic(
 				t,
 				func() { _ = g.Literalize("") },
-				testx.ErrorContains("invalid literalize key type"),
+				ErrorContains("invalid literalize key type"),
 			)
 		})
 	})
@@ -550,13 +549,13 @@ func TestGlobal(t *testing.T) {
 			rtt := g.TType(c.rt)
 			utt := g.TType(g.Literalize(c.rt))
 			identical := types.Identical(utt, rtt)
-			NewWithT(t).Expect(identical).To(BeTrue())
+			Expect(t, identical, BeTrue())
 		}
 		t.Run("InvalidInput", func(t *testing.T) {
-			testx.ExpectPanic(
+			ExpectPanic(
 				t,
 				func() { _ = g.TType("") },
-				testx.ErrorContains("invalid ttype key type"),
+				ErrorContains("invalid ttype key type"),
 			)
 		})
 	})

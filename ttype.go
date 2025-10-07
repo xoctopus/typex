@@ -13,35 +13,47 @@ import (
 )
 
 func NewTType(t any) Type {
-	var tt types.Type
+	var (
+		tt    types.Type
+		alias *types.Alias
+	)
 	switch t.(type) {
 	case reflect.Type:
 		tt = internal.Global().TType(t)
 	case types.Type:
 		tt = t.(types.Type)
-		switch tt.(type) {
+		switch xt := tt.(type) {
 		case *types.Union, *types.Tuple, *types.TypeParam:
-			panic(errors.Errorf("invalid NewTType by types.Type for `%T`", tt))
+			panic(errors.Errorf("invalid NewTType by types.Type for `%T`", xt))
 		case *types.Alias:
-			tt = tt.(*types.Alias).Rhs()
+			tt = xt.Rhs()
+			alias = xt
 		}
 	default:
 		panic(errors.Errorf("invalid NewTType type `%T`", t))
 	}
 
-	return &ttype{tt, internal.Global().Literalize(tt), inspectx.InspectMethods(tt)}
+	return &ttype{
+		t:       tt,
+		u:       internal.Global().Literalize(tt),
+		methods: inspectx.InspectMethods(tt),
+		alias:   alias,
+	}
 }
 
 type ttype struct {
+	alias   *types.Alias
 	t       types.Type
 	u       internal.Literal
 	methods []*types.Func
 }
 
-func (t *ttype) Unwrap() any { return t.t }
+func (t *ttype) Unwrap() any {
+	return t.t
+}
 
 func (t *ttype) Kind() reflect.Kind {
-	switch x := t.t.(type) {
+	switch t.t.(type) {
 	case *types.Basic:
 		return t.u.(internal.Builtin).Kind()
 	case *types.Interface:
@@ -67,20 +79,21 @@ func (t *ttype) Kind() reflect.Kind {
 	}
 }
 
-func (t *ttype) PkgPath() string { return t.u.PkgPath() }
-
-func (t *ttype) Name() string { return t.u.Name() }
-
-func (t *ttype) String() string { return t.u.String() }
-
-func (t *ttype) Alias() string {
-	if tt, ok := t.u.(internal.Builtin); ok {
-		return tt.Alias()
-	}
-	return ""
+func (t *ttype) PkgPath() string {
+	return t.u.PkgPath()
 }
 
-func (t *ttype) TypeLit() string { return t.u.TypeLit() }
+func (t *ttype) Name() string {
+	return t.u.Name()
+}
+
+func (t *ttype) String() string {
+	return t.u.String()
+}
+
+func (t *ttype) TypeLit() string {
+	return t.u.TypeLit()
+}
 
 func (t *ttype) Implements(u any) bool {
 	switch x := u.(type) {
