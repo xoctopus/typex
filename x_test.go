@@ -9,11 +9,11 @@ import (
 	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex"
-	"github.com/xoctopus/typex/internal/pkgx"
+	"github.com/xoctopus/typex/pkgutil"
 	"github.com/xoctopus/typex/testdata"
 )
 
-var pkg = pkgx.New("github.com/xoctopus/typex/testdata")
+var pkg = pkgutil.New("github.com/xoctopus/typex/testdata")
 
 func init() {
 	testdata.RegisterInstantiations(
@@ -39,7 +39,7 @@ func TestNewTType(t *testing.T) {
 	})
 	t.Run("InvalidInput", func(t *testing.T) {
 		t.Run("Union", func(t *testing.T) {
-			tt := pkgx.MustLookup[*types.Named](pkg, "Float").Underlying().(*types.Interface).EmbeddedType(0)
+			tt := pkgutil.MustLookup[*types.Named](pkg, "Float").Underlying().(*types.Interface).EmbeddedType(0)
 			ExpectPanic[error](
 				t,
 				func() { typex.NewTType(tt) },
@@ -47,7 +47,7 @@ func TestNewTType(t *testing.T) {
 			)
 		})
 		t.Run("Tuple", func(t *testing.T) {
-			tt := pkgx.MustLookup[*types.Named](pkg, "Compare").Underlying().(*types.Signature).Results()
+			tt := pkgutil.MustLookup[*types.Named](pkg, "Compare").Underlying().(*types.Signature).Results()
 			ExpectPanic[error](
 				t,
 				func() { typex.NewTType(tt) },
@@ -55,7 +55,7 @@ func TestNewTType(t *testing.T) {
 			)
 		})
 		t.Run("TypeParam", func(t *testing.T) {
-			tt := pkgx.MustLookup[*types.Named](pkg, "BTreeNode").TypeParams().At(0)
+			tt := pkgutil.MustLookup[*types.Named](pkg, "BTreeNode").TypeParams().At(0)
 			ExpectPanic[error](
 				t,
 				func() { typex.NewTType(tt) },

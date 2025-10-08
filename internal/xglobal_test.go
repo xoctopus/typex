@@ -14,28 +14,28 @@ import (
 	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex/internal"
-	"github.com/xoctopus/typex/internal/pkgx"
+	"github.com/xoctopus/typex/pkgutil"
 	"github.com/xoctopus/typex/testdata"
 )
 
 var (
 	g = internal.Global()
-	p = pkgx.New("github.com/xoctopus/typex/testdata")
+	p = pkgutil.New("github.com/xoctopus/typex/testdata")
 
-	tTestdataTagged                 = pkgx.MustLookup[*types.Named](p, "Tagged")
-	tTestdataTypedSliceAliasNetAddr = pkgx.MustLookup[*types.Alias](p, "TypedSliceAliasNetAddr")
-	tTestdataMap                    = pkgx.MustLookup[*types.Named](p, "Map")
-	tTestdataPassTypeParam          = pkgx.MustLookup[*types.Named](p, "PassTypeParam")
-	tTestdataTypedArray             = pkgx.MustLookup[*types.Named](p, "TypedArray")
-	tTestdataTypedSlice             = pkgx.MustLookup[*types.Named](p, "TypedSlice")
+	tTestdataTagged                 = pkgutil.MustLookup[*types.Named](p, "Tagged")
+	tTestdataTypedSliceAliasNetAddr = pkgutil.MustLookup[*types.Alias](p, "TypedSliceAliasNetAddr")
+	tTestdataMap                    = pkgutil.MustLookup[*types.Named](p, "Map")
+	tTestdataPassTypeParam          = pkgutil.MustLookup[*types.Named](p, "PassTypeParam")
+	tTestdataTypedArray             = pkgutil.MustLookup[*types.Named](p, "TypedArray")
+	tTestdataTypedSlice             = pkgutil.MustLookup[*types.Named](p, "TypedSlice")
 
-	tFmtStringer   = pkgx.MustLookupByPath[*types.Named]("fmt", "Stringer")
-	tIoReadCloser  = pkgx.MustLookupByPath[*types.Named]("io", "ReadCloser")
-	tIoWriteCloser = pkgx.MustLookupByPath[*types.Named]("io", "WriteCloser")
-	tIoReadWriter  = pkgx.MustLookupByPath[*types.Named]("io", "ReadWriter")
+	tFmtStringer   = pkgutil.MustLookupByPath[*types.Named]("fmt", "Stringer")
+	tIoReadCloser  = pkgutil.MustLookupByPath[*types.Named]("io", "ReadCloser")
+	tIoWriteCloser = pkgutil.MustLookupByPath[*types.Named]("io", "WriteCloser")
+	tIoReadWriter  = pkgutil.MustLookupByPath[*types.Named]("io", "ReadWriter")
 
-	tNetAddr        = pkgx.MustLookupByPath[*types.Named]("net", "Addr")
-	tError          = pkgx.MustLookupByPath[*types.Signature]("errors", "New").Results().At(0).Type()
+	tNetAddr        = pkgutil.MustLookupByPath[*types.Named]("net", "Addr")
+	tError          = pkgutil.MustLookupByPath[*types.Signature]("errors", "New").Results().At(0).Type()
 	tEmptyInterface = types.NewInterfaceType(nil, nil)
 	tEmptyStruct    = types.NewStruct(nil, nil)
 )
@@ -93,7 +93,7 @@ var GlobalCases = []struct {
 	{
 		reflect.TypeFor[[3]iter.Seq[int]](),
 		types.NewArray(resultx.Unwrap(types.Instantiate(
-			nil, pkgx.MustLookup[*types.Named](pkgx.New("iter"), "Seq"),
+			nil, pkgutil.MustLookup[*types.Named](pkgutil.New("iter"), "Seq"),
 			[]types.Type{types.Typ[types.Int]}, true,
 		)), 3),
 		"[3]iter.Seq[int]", "[3]iter.Seq[int]", "", "", "[3]iter.Seq[int]",

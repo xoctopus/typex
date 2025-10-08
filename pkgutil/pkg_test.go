@@ -1,4 +1,4 @@
-package pkgx_test
+package pkgutil_test
 
 import (
 	"go/types"
@@ -6,7 +6,7 @@ import (
 
 	. "github.com/xoctopus/x/testx"
 
-	. "github.com/xoctopus/typex/internal/pkgx"
+	. "github.com/xoctopus/typex/pkgutil"
 )
 
 func TestNewPackage(t *testing.T) {
@@ -71,8 +71,8 @@ type (
 )
 
 func TestLookup(t *testing.T) {
-	path := "github.com/xoctopus/typex/internal/pkgx_test"
-	p := NewT(types.NewPackage(path, "pkgx_test"))
+	path := "github.com/xoctopus/typex/pkgutil_test"
+	p := NewT(types.NewPackage(path, "pkgutil_test"))
 
 	_, exists := Lookup[*types.Named](p, "Undefined")
 	Expect(t, exists, BeFalse())
@@ -111,12 +111,12 @@ func TestLookup(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	path := "github.com/xoctopus/typex/internal/pkgx"
-	pkg := Load(path)
+	path := "github.com/xoctopus/typex/pkgutil"
+	pkg := New(path)
 	Expect(t, pkg.Path(), Equal(path))
 
-	path = "github.com/xoctopus/typex/internal/pkgx_test"
-	pkg = Load(path)
+	path = "github.com/xoctopus/typex/pkgutil_test"
+	pkg = New(path)
 	Expect(t, pkg.Path(), Equal(path))
 
 	Expect(t, pkg.Scope().Lookup("TestLoad"), NotBeNil[types.Object]())

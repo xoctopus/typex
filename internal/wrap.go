@@ -10,7 +10,7 @@ import (
 	"github.com/xoctopus/x/misc/must"
 
 	"github.com/xoctopus/typex/internal/parsex"
-	"github.com/xoctopus/typex/internal/pkgx"
+	"github.com/xoctopus/typex/pkgutil"
 )
 
 var (
@@ -154,7 +154,7 @@ func wrap(id string) (wrapped string) {
 	must.BeTrue(dot != -1)
 	path, name = id[0:dot], id[dot+1:]
 	b := strings.Builder{}
-	b.WriteString(pkgx.New(path).ID())
+	b.WriteString(pkgutil.New(path).ID())
 	b.WriteString(".")
 	b.WriteString(name)
 	if len(targs) > 0 {

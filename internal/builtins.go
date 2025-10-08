@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/xoctopus/typex/internal/pkgx"
+	"github.com/xoctopus/typex/pkgutil"
 )
 
 var builtins = []*builtin{
@@ -98,7 +98,7 @@ var builtins = []*builtin{
 		ttyp:     types.Typ[types.String],
 	}, {
 		kind:     reflect.UnsafePointer,
-		pkg:      pkgx.New("unsafe"),
+		pkg:      pkgutil.New("unsafe"),
 		typename: "Pointer",
 		rtyp:     reflect.TypeFor[unsafe.Pointer](),
 		ttyp:     types.Typ[types.UnsafePointer],
@@ -112,13 +112,13 @@ var builtins = []*builtin{
 		kind:     reflect.Interface,
 		typename: "error",
 		rtyp:     reflect.TypeFor[error](),
-		ttyp:     pkgx.MustLookupByPath[*types.Signature]("errors", "New").Results().At(0).Type(),
+		ttyp:     pkgutil.MustLookupByPath[*types.Signature]("errors", "New").Results().At(0).Type(),
 	},
 }
 
 type builtin struct {
 	kind     reflect.Kind
-	pkg      pkgx.Package
+	pkg      pkgutil.Package
 	typename string
 	alias    string
 	rtyp     reflect.Type

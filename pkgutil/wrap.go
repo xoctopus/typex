@@ -1,4 +1,4 @@
-package pkgx
+package pkgutil
 
 import (
 	"strings"

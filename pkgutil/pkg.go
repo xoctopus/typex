@@ -1,4 +1,4 @@
-package pkgx
+package pkgutil
 
 import (
 	"go/types"
@@ -15,7 +15,7 @@ var gPackages sync.Map
 
 const DefaultLoadMode = packages.LoadMode(0b11111111111111111)
 
-func Load(path string) *types.Package {
+func load(path string) *types.Package {
 	_path := path
 	if strings.HasSuffix(path, "_test") {
 		path = strings.TrimSuffix(_path, "_test")
@@ -60,7 +60,7 @@ func New(path string) (p Package) {
 		gPackages.Store(path, p)
 	}()
 
-	return &xpkg{Package: Load(path), id: Wrap(path)}
+	return &xpkg{Package: load(path), id: Wrap(path)}
 }
 
 type Package interface {

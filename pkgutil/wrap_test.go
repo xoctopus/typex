@@ -1,11 +1,11 @@
-package pkgx_test
+package pkgutil_test
 
 import (
 	"testing"
 
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal/pkgx"
+	"github.com/xoctopus/typex/pkgutil"
 )
 
 func TestWrapAndUnwrap(t *testing.T) {
@@ -17,17 +17,17 @@ func TestWrapAndUnwrap(t *testing.T) {
 		{"github.com/path/to/pkg_test.Type", "xwrap_github_d_com_s_path_s_to_s_pkg_u_test_d_Type"},
 	}
 
-	pkgx.Clear()
+	pkgutil.Clear()
 	for _, c := range cases {
-		Expect(t, pkgx.Wrap(c[0]), Equal(c[1]))
+		Expect(t, pkgutil.Wrap(c[0]), Equal(c[1]))
 	}
-	pkgx.Clear()
+	pkgutil.Clear()
 	for _, c := range cases {
-		Expect(t, pkgx.Unwrap(c[1]), Equal(c[0]))
+		Expect(t, pkgutil.Unwrap(c[1]), Equal(c[0]))
 	}
 
-	pkgx.Clear()
-	Expect(t, pkgx.Wrap("xwrap_net"), Equal("xwrap_net"))
-	Expect(t, pkgx.Unwrap("xwrap_net"), Equal("net"))
-	Expect(t, pkgx.Wrap("net"), Equal("net"))
+	pkgutil.Clear()
+	Expect(t, pkgutil.Wrap("xwrap_net"), Equal("xwrap_net"))
+	Expect(t, pkgutil.Unwrap("xwrap_net"), Equal("net"))
+	Expect(t, pkgutil.Wrap("net"), Equal("net"))
 }

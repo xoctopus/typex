@@ -10,7 +10,7 @@ import (
 
 	"github.com/xoctopus/typex/internal"
 	"github.com/xoctopus/typex/internal/gtypex"
-	"github.com/xoctopus/typex/internal/pkgx"
+	"github.com/xoctopus/typex/pkgutil"
 	"github.com/xoctopus/typex/testdata"
 )
 
@@ -32,7 +32,7 @@ var path = "github.com/xoctopus/typex/internal/gtypex_test"
 
 func TestUnderlying(t *testing.T) {
 	t.Run("SameUnderlying", func(t *testing.T) {
-		sig := pkgx.MustLookup[*types.Signature](pkgx.New("errors"), "New")
+		sig := pkgutil.MustLookup[*types.Signature](pkgutil.New("errors"), "New")
 		for _, v := range []types.Type{
 			types.Typ[types.Int],                                // basic
 			types.NewArray(types.Typ[types.Int], 1),             // array
@@ -49,7 +49,7 @@ func TestUnderlying(t *testing.T) {
 
 	t.Run("Generic", func(t *testing.T) {
 		instUnderlying := gtypex.Instantiate(
-			pkgx.MustLookupByPath[*types.Named](path, "Generic").Underlying(),
+			pkgutil.MustLookupByPath[*types.Named](path, "Generic").Underlying(),
 			[]types.Type{types.Typ[types.Int]},
 		)
 		underlyingInst := gtypex.Underlying(

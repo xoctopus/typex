@@ -14,7 +14,7 @@ import (
 	"github.com/xoctopus/x/stringsx"
 
 	"github.com/xoctopus/typex/internal/gtypex"
-	"github.com/xoctopus/typex/internal/pkgx"
+	"github.com/xoctopus/typex/pkgutil"
 )
 
 type Literal interface {
@@ -123,7 +123,7 @@ func literalize(id string) Literal {
 	// 	return utype{typename: e.Name}
 	case *ast.SelectorExpr:
 		return utype{
-			pkg:      pkgx.New(ident(id, e.X)),
+			pkg:      pkgutil.New(ident(id, e.X)),
 			typename: ident(id, e.Sel),
 		}
 	case *ast.IndexExpr:
@@ -283,7 +283,7 @@ func literalizeTT(t types.Type) Literal {
 		xx, ok := t.(*types.Named)
 		must.BeTrueF(ok, "")
 		u := utype{
-			pkg:      pkgx.NewT(xx.Obj().Pkg()),
+			pkg:      pkgutil.NewT(xx.Obj().Pkg()),
 			typename: xx.Obj().Name(),
 		}
 		if xx.TypeArgs().Len() > 0 {
@@ -297,7 +297,7 @@ func literalizeTT(t types.Type) Literal {
 }
 
 type utype struct {
-	pkg      pkgx.Package
+	pkg      pkgutil.Package
 	typename string
 	targs    []Literal
 	kind     reflect.Kind
@@ -540,7 +540,7 @@ func (t utype) TType() types.Type {
 		ins := make([]*types.Var, len(t.ins))
 		for i, v := range t.ins {
 			var pkg *types.Package
-			if p := pkgx.New(v.PkgPath()); p != nil {
+			if p := pkgutil.New(v.PkgPath()); p != nil {
 				pkg = p.Unwrap()
 			}
 			ins[i] = types.NewParam(0, pkg, "", v.TType())
@@ -548,7 +548,7 @@ func (t utype) TType() types.Type {
 		outs := make([]*types.Var, len(t.outs))
 		for i, v := range t.outs {
 			var pkg *types.Package
-			if p := pkgx.New(v.PkgPath()); p != nil {
+			if p := pkgutil.New(v.PkgPath()); p != nil {
 				pkg = p.Unwrap()
 			}
 			outs[i] = types.NewParam(0, pkg, "", v.TType())
@@ -577,7 +577,7 @@ func (t utype) TType() types.Type {
 		tags := make([]string, len(t.fields))
 		for i, f := range t.fields {
 			pkg := (*types.Package)(nil)
-			if p := pkgx.New(f.typ.PkgPath()); p != nil {
+			if p := pkgutil.New(f.typ.PkgPath()); p != nil {
 				pkg = p.Unwrap()
 			}
 			fields[i] = types.NewField(0, pkg, f.name, f.typ.TType(), f.embedded)
@@ -586,7 +586,7 @@ func (t utype) TType() types.Type {
 		return types.NewStruct(fields, tags)
 	default:
 		must.BeTrue(t.pkg != nil && t.typename != "")
-		typ := pkgx.MustLookup[*types.Named](t.pkg, t.typename)
+		typ := pkgutil.MustLookup[*types.Named](t.pkg, t.typename)
 		must.BeTrue(typ != nil)
 		must.BeTrue(typ.TypeParams().Len() == len(t.targs))
 		if len(t.targs) > 0 {
