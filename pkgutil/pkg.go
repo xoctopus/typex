@@ -69,6 +69,7 @@ type Package interface {
 
 	Path() string
 	Name() string
+	// Scope package level definitions
 	Scope() *types.Scope
 }
 

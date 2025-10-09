@@ -1,6 +1,7 @@
 package internal_test
 
 import (
+	"context"
 	"fmt"
 	"go/types"
 	"io"
@@ -14,6 +15,7 @@ import (
 	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex/internal"
+	"github.com/xoctopus/typex/namer"
 	"github.com/xoctopus/typex/pkgutil"
 	"github.com/xoctopus/typex/testdata"
 )
@@ -41,13 +43,13 @@ var (
 )
 
 var GlobalCases = []struct {
-	rt       reflect.Type
-	tt       types.Type
-	id       string
-	wrapped  string
-	pkg      string
-	name     string
-	typename string
+	rt      reflect.Type
+	tt      types.Type
+	id      string
+	wrapped string
+	pkg     string
+	name    string
+	literal string
 }{
 	{reflect.Type(nil), types.Type(nil), "", "", "", "", ""},
 	{
@@ -527,7 +529,7 @@ func TestGlobal(t *testing.T) {
 			Expect(t, ur.String(), Equal(c.id))
 			Expect(t, ur.PkgPath(), Equal(c.pkg))
 			Expect(t, ur.Name(), Equal(c.name))
-			Expect(t, ur.TypeLit(), Equal(c.typename))
+			Expect(t, ur.TypeLit(context.Background()), Equal(c.literal))
 
 			if builtin, ok := ur.(internal.Builtin); ok {
 				Expect(t, builtin.Kind(), Equal(c.rt.Kind()))
@@ -559,4 +561,19 @@ func TestGlobal(t *testing.T) {
 			)
 		})
 	})
+
+	t.Run("Namer", func(t *testing.T) {
+		ctx := namer.WithContext(context.Background(), &TestPackageNamer{})
+		u := g.Literalize(reflect.TypeFor[testdata.TypedArray[testdata.Map]]())
+		Expect(t, u.TypeLit(ctx), Equal("demo.TypedArray[demo.Map]"))
+	})
+}
+
+type TestPackageNamer struct{}
+
+func (t TestPackageNamer) Package(path string) string {
+	if path == "github.com/xoctopus/typex/testdata" {
+		return "demo"
+	}
+	return path
 }

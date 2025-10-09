@@ -1,6 +1,7 @@
 package x
 
 import (
+	"context"
 	"reflect"
 )
 
@@ -13,7 +14,7 @@ type Type interface {
 	PkgPath() string
 	Name() string
 	String() string
-	TypeLit() string
+	TypeLit(context.Context) string
 
 	Implements(any) bool
 	AssignableTo(any) bool

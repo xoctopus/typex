@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"go/types"
 	"reflect"
 	"unsafe"
@@ -158,7 +159,7 @@ func (t *builtin) String() string {
 	return t.typename
 }
 
-func (t *builtin) TypeLit() string {
+func (t *builtin) TypeLit(_ context.Context) string {
 	return t.String()
 }
 

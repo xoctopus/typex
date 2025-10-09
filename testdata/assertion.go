@@ -1,6 +1,7 @@
 package testdata
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -223,7 +224,7 @@ func (c *Case) Run(t *testing.T) {
 	})
 	t.Run("Literal", func(t *testing.T) {
 		Expect(t, c.rt.String(), Equal(c.tt.String()))
-		Expect(t, c.rt.TypeLit(), Equal(c.tt.TypeLit()))
+		Expect(t, c.rt.TypeLit(context.Background()), Equal(c.tt.TypeLit(context.Background())))
 	})
 
 	t.Run("Implements", func(t *testing.T) {

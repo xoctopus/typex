@@ -1,6 +1,7 @@
 package typex
 
 import (
+	"context"
 	"go/types"
 	"reflect"
 
@@ -40,8 +41,8 @@ func (t *rtype) String() string {
 	return t.u.String()
 }
 
-func (t *rtype) TypeLit() string {
-	return t.u.TypeLit()
+func (t *rtype) TypeLit(ctx context.Context) string {
+	return t.u.TypeLit(ctx)
 }
 
 func (t *rtype) Implements(u any) bool {

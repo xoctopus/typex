@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -14,6 +15,7 @@ import (
 	"github.com/xoctopus/x/stringsx"
 
 	"github.com/xoctopus/typex/internal/gtypex"
+	"github.com/xoctopus/typex/namer"
 	"github.com/xoctopus/typex/pkgutil"
 )
 
@@ -24,11 +26,11 @@ type Literal interface {
 	Name() string
 	// String return type's string with full package path everywhere
 	String() string
-	// TypeLit returns type's literal, it should be consistent with the literal
-	// representation shown in source code
-	TypeLit() string
 	// TType returns type's types.Type
 	TType() types.Type
+	// TypeLit returns type's literal, it should be consistent with the literal
+	// representation shown in source code
+	TypeLit(context.Context) string
 }
 
 func literalize(id string) Literal {
@@ -339,11 +341,18 @@ func (t utype) Name() string {
 	return ""
 }
 
-func (t utype) TypeLit() string {
+func (t utype) TypeLit(ctx context.Context) string {
 	if t.pkg != nil {
 		must.BeTrue(t.typename != "")
+
+		name := t.pkg.Name()
+		pkgnamer, _ := namer.FromContext(ctx)
+		if pkgnamer != nil {
+			name = pkgnamer.Package(t.pkg.Path())
+		}
+
 		b := strings.Builder{}
-		b.WriteString(t.pkg.Name())
+		b.WriteString(name)
 		b.WriteString(".")
 		b.WriteString(t.typename)
 
@@ -355,7 +364,7 @@ func (t utype) TypeLit() string {
 			if i > 0 {
 				b.WriteString(",")
 			}
-			b.WriteString(targ.TypeLit())
+			b.WriteString(targ.TypeLit(ctx))
 		}
 		b.WriteString("]")
 		return b.String()
@@ -363,9 +372,9 @@ func (t utype) TypeLit() string {
 
 	switch t.kind {
 	case reflect.Array:
-		return fmt.Sprintf("[%d]%s", t.len, t.elem.TypeLit())
+		return fmt.Sprintf("[%d]%s", t.len, t.elem.TypeLit(ctx))
 	case reflect.Chan:
-		return fmt.Sprintf("%s%s", t.dir.String(), t.elem.TypeLit())
+		return fmt.Sprintf("%s%s", t.dir.String(), t.elem.TypeLit(ctx))
 	case reflect.Func:
 		b := strings.Builder{}
 
@@ -379,10 +388,10 @@ func (t utype) TypeLit() string {
 				b.WriteString(", ")
 			}
 			if i == len(t.ins)-1 && t.variadic {
-				b.WriteString("..." + t.ins[i].TypeLit()[2:])
+				b.WriteString("..." + t.ins[i].TypeLit(ctx)[2:])
 				break
 			}
-			b.WriteString(t.ins[i].TypeLit())
+			b.WriteString(t.ins[i].TypeLit(ctx))
 		}
 		b.WriteString(")")
 
@@ -397,7 +406,7 @@ func (t utype) TypeLit() string {
 			if i > 0 {
 				b.WriteString(", ")
 			}
-			b.WriteString(v.TypeLit())
+			b.WriteString(v.TypeLit(ctx))
 		}
 		if len(t.outs) > 1 {
 			b.WriteString(")")
@@ -410,16 +419,16 @@ func (t utype) TypeLit() string {
 			if i > 0 {
 				b.WriteString("; ")
 			}
-			b.WriteString(m.TypeLit())
+			b.WriteString(m.TypeLit(ctx))
 		}
 		b.WriteString(" }")
 		return b.String()
 	case reflect.Map:
-		return fmt.Sprintf("map[%s]%s", t.key.TypeLit(), t.elem.TypeLit())
+		return fmt.Sprintf("map[%s]%s", t.key.TypeLit(ctx), t.elem.TypeLit(ctx))
 	case reflect.Pointer:
-		return fmt.Sprintf("*%s", t.elem.TypeLit())
+		return fmt.Sprintf("*%s", t.elem.TypeLit(ctx))
 	case reflect.Slice:
-		return fmt.Sprintf("[]%s", t.elem.TypeLit())
+		return fmt.Sprintf("[]%s", t.elem.TypeLit(ctx))
 	default:
 		must.BeTrue(t.kind == reflect.Struct)
 		if len(t.fields) == 0 {
@@ -431,7 +440,7 @@ func (t utype) TypeLit() string {
 			if i > 0 {
 				b.WriteString("; ")
 			}
-			b.WriteString(f.TypeLit())
+			b.WriteString(f.TypeLit(ctx))
 		}
 		b.WriteString(" }")
 		return b.String()
@@ -607,13 +616,13 @@ type ufield struct {
 	embedded bool
 }
 
-func (v ufield) TypeLit() string {
+func (v ufield) TypeLit(ctx context.Context) string {
 	b := strings.Builder{}
 	if !v.embedded {
 		b.WriteString(v.name)
 		b.WriteString(" ")
 	}
-	b.WriteString(v.typ.TypeLit())
+	b.WriteString(v.typ.TypeLit(ctx))
 	if len(v.tag) > 0 {
 		b.WriteString(" ")
 		b.WriteString(strconv.Quote(v.tag))
