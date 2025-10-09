@@ -352,8 +352,10 @@ func (t utype) TypeLit(ctx context.Context) string {
 		}
 
 		b := strings.Builder{}
-		b.WriteString(name)
-		b.WriteString(".")
+		if name != "" {
+			b.WriteString(name)
+			b.WriteString(".")
+		}
 		b.WriteString(t.typename)
 
 		if len(t.targs) == 0 {

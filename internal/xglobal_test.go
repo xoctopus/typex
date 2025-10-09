@@ -565,7 +565,7 @@ func TestGlobal(t *testing.T) {
 	t.Run("Namer", func(t *testing.T) {
 		ctx := namer.WithContext(context.Background(), &TestPackageNamer{})
 		u := g.Literalize(reflect.TypeFor[testdata.TypedArray[testdata.Map]]())
-		Expect(t, u.TypeLit(ctx), Equal("demo.TypedArray[demo.Map]"))
+		Expect(t, u.TypeLit(ctx), Equal("TypedArray[Map]"))
 	})
 }
 
@@ -573,7 +573,7 @@ type TestPackageNamer struct{}
 
 func (t TestPackageNamer) Package(path string) string {
 	if path == "github.com/xoctopus/typex/testdata" {
-		return "demo"
+		return ""
 	}
 	return path
 }
