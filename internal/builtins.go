@@ -10,7 +10,7 @@ import (
 )
 
 var builtins = []*builtin{
-	{}, {
+	{
 		kind:     reflect.Bool,
 		typename: "bool",
 		rtyp:     reflect.TypeFor[bool](),
