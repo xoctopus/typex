@@ -503,6 +503,7 @@ var GlobalCases = []struct {
 func TestGlobal(t *testing.T) {
 	t.Run("Wrap", func(t *testing.T) {
 		for _, c := range GlobalCases {
+			t.Log(c.wrapped)
 			Expect(t, g.Wrap(c.rt), Equal(c.wrapped))
 			Expect(t, g.Wrap(c.tt), Equal(c.wrapped))
 		}

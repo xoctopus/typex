@@ -3,7 +3,7 @@ package pkgutil
 import (
 	"strings"
 
-	"github.com/xoctopus/x/mapx"
+	"github.com/xoctopus/x/syncx"
 )
 
 const (
@@ -14,8 +14,8 @@ const (
 )
 
 var (
-	p2w = mapx.NewSmap[string, string]()
-	w2p = mapx.NewSmap[string, string]()
+	p2w = syncx.NewSmap[string, string]()
+	w2p = syncx.NewSmap[string, string]()
 )
 
 func Clear() {

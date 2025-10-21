@@ -5,8 +5,8 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
-	"github.com/xoctopus/x/mapx"
 	"github.com/xoctopus/x/misc/must"
+	"github.com/xoctopus/x/syncx"
 )
 
 func init() {
@@ -38,15 +38,15 @@ type TypeGlobal interface {
 }
 
 type global struct {
-	wraps    mapx.Map[any, string]
-	literals mapx.Map[any, Literal]
-	ttypes   mapx.Map[any, types.Type]
+	wraps    syncx.Map[any, string]
+	literals syncx.Map[any, Literal]
+	ttypes   syncx.Map[any, types.Type]
 }
 
 var g = &global{
-	wraps:    mapx.NewSafeXmap[any, string](),
-	literals: mapx.NewSafeXmap[any, Literal](),
-	ttypes:   mapx.NewSafeXmap[any, types.Type](),
+	wraps:    syncx.NewSmap[any, string](),
+	literals: syncx.NewSmap[any, Literal](),
+	ttypes:   syncx.NewSmap[any, types.Type](),
 }
 
 func (g *global) Wrap(key any) string {
@@ -65,17 +65,6 @@ func (g *global) wrap(key any) string {
 	if v, matched := g.wraps.Load(key); matched {
 		return v
 	}
-	if t, ok := key.(types.Type); ok {
-		id, matched := g.wraps.LoadEq(func(k any) bool {
-			if _, ok := k.(types.Type); !ok {
-				return false
-			}
-			return types.Identical(t, k.(types.Type))
-		})
-		if matched {
-			return id
-		}
-	}
 
 	id := ""
 	switch k := key.(type) {
@@ -86,6 +75,20 @@ func (g *global) wrap(key any) string {
 	case reflect.Type:
 		id = wrapRT(k)
 	default:
+		t, ok := key.(types.Type)
+		must.BeTrueF(ok, "expect string, reflect.Type or types.Type, but got `%T`", key)
+
+		matched := false
+		g.wraps.Range(func(a any, s string) bool {
+			if x, ok := a.(types.Type); ok && types.Identical(x, t) {
+				matched, id = true, s
+				return false
+			}
+			return true
+		})
+		if matched {
+			return id
+		}
 		id = wrapTT(key.(types.Type))
 	}
 
@@ -107,18 +110,7 @@ func (g *global) Literalize(key any) Literal {
 
 func (g *global) literalize(key any) Literal {
 	if v, matched := g.literals.Load(key); matched {
-		return v.(Literal)
-	}
-	if t, ok := key.(types.Type); ok {
-		u, matched := g.literals.LoadEq(func(k any) bool {
-			if _, ok := k.(types.Type); !ok {
-				return false
-			}
-			return types.Identical(t, k.(types.Type))
-		})
-		if matched {
-			return u.(Literal)
-		}
+		return v
 	}
 
 	var u Literal
@@ -129,7 +121,19 @@ func (g *global) literalize(key any) Literal {
 		u = literalizeRT(k)
 	default:
 		t, ok := key.(types.Type)
-		must.BeTrueF(ok, "expect reflect.Type or types.Type")
+		must.BeTrueF(ok, "expect string, reflect.Type or types.Type, but got `%T`", key)
+
+		matched := false
+		g.literals.Range(func(a any, literal Literal) bool {
+			if x, ok := a.(types.Type); ok && types.Identical(x, t) {
+				matched, u = true, literal
+				return false
+			}
+			return true
+		})
+		if matched {
+			return u
+		}
 		u = literalizeTT(t)
 	}
 

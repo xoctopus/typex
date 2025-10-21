@@ -120,8 +120,6 @@ lint: dep
 	@gocyclo -over 10 -avg -ignore '_test|_test.go|vendor|pb' . || true
 	@echo "\tdone"
 	@echo "\t>>>run golangci-lint"
-	#@golangci-lint run ./...
-	#@echo "\tdone"
 
 pre-commit: dep lint fmt cover clean
 
