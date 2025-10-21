@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/xoctopus/x v0.1.3-0.20251021082739-9149d88657e4
+	github.com/xoctopus/x v0.1.3-0.20251021103404-c872bf18f209
 	golang.org/x/tools v0.38.0
 )
 
