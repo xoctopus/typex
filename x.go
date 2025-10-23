@@ -1,6 +1,8 @@
 package typex
 
 import (
+	"reflect"
+
 	"github.com/xoctopus/typex/internal/x"
 )
 
@@ -28,3 +30,10 @@ type (
 // 		panic("unexpected type: %T")
 // 	}
 // }
+
+func Deref(t Type) Type {
+	for t.Kind() == reflect.Pointer && t.Name() == "" {
+		t = t.Elem()
+	}
+	return t
+}
