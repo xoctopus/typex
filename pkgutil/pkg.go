@@ -13,7 +13,14 @@ import (
 
 var gPackages sync.Map
 
-const DefaultLoadMode = packages.LoadMode(0b11111111111111111)
+const (
+	LoadFiles       = packages.LoadFiles
+	LoadImports     = packages.LoadImports
+	LoadTypes       = packages.LoadTypes
+	LoadSyntax      = packages.LoadSyntax
+	LoadAllSyntax   = packages.LoadAllSyntax
+	DefaultLoadMode = LoadAllSyntax | packages.NeedModule
+)
 
 func load(path string) *types.Package {
 	_path := path
