@@ -10,13 +10,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/xoctopus/pkgx"
 	"github.com/xoctopus/x/misc/must"
 	"github.com/xoctopus/x/resultx"
 	"github.com/xoctopus/x/stringsx"
 
 	"github.com/xoctopus/typex/internal/gtypex"
-	"github.com/xoctopus/typex/namer"
-	"github.com/xoctopus/typex/pkgutil"
 )
 
 type Literal interface {
@@ -27,14 +26,14 @@ type Literal interface {
 	// String return type's string with full package path everywhere
 	String() string
 	// TType returns type's types.Type
-	TType() types.Type
+	TType(context.Context) types.Type
 	// TypeLit returns type's literal, it should be consistent with the literal
 	// representation shown in source code
 	TypeLit(context.Context) string
 }
 
-func literalize(id string) Literal {
-	id = g.wrap(id)
+func literalize(ctx context.Context, id string) Literal {
+	id = g.wrap(ctx, id)
 	ident := func(code string, x ast.Node) string {
 		return code[x.Pos()-1 : x.End()-1]
 	}
@@ -45,19 +44,19 @@ func literalize(id string) Literal {
 		if e.Len != nil {
 			return utype{
 				kind: reflect.Array,
-				elem: g.literalize(ident(id, e.Elt)),
+				elem: g.literalize(ctx, ident(id, e.Elt)),
 				len:  resultx.Unwrap(stringsx.Atoi(ident(id, e.Len))),
 			}
 		}
 		return utype{
 			kind: reflect.Slice,
-			elem: g.literalize(ident(id, e.Elt)),
+			elem: g.literalize(ctx, ident(id, e.Elt)),
 		}
 	case *ast.ChanType:
 		return utype{
 			kind: reflect.Chan,
 			dir:  NewChanDir(e.Dir),
-			elem: g.literalize(ident(id, e.Value)),
+			elem: g.literalize(ctx, ident(id, e.Value)),
 		}
 	case *ast.FuncType:
 		u := utype{kind: reflect.Func}
@@ -67,16 +66,16 @@ func literalize(id string) Literal {
 				param := ident(id, p.Type)
 				if i == len(e.Params.List)-1 && strings.HasPrefix(param, "...") {
 					u.variadic = true
-					u.ins[i] = g.literalize("[]" + param[3:])
+					u.ins[i] = g.literalize(ctx, "[]"+param[3:])
 					break
 				}
-				u.ins[i] = g.literalize(param)
+				u.ins[i] = g.literalize(ctx, param)
 			}
 		}
 		if e.Results != nil && len(e.Results.List) > 0 {
 			u.outs = make([]Literal, len(e.Results.List))
 			for i, r := range e.Results.List {
-				u.outs[i] = g.literalize(ident(id, r.Type))
+				u.outs[i] = g.literalize(ctx, ident(id, r.Type))
 			}
 		}
 		return u
@@ -86,7 +85,7 @@ func literalize(id string) Literal {
 			methods: make([]Literal, len(e.Methods.List)),
 		}
 		for i, m := range e.Methods.List {
-			mi := g.literalize("func" + ident(id, m.Type)).(utype)
+			mi := g.literalize(ctx, "func"+ident(id, m.Type)).(utype)
 			mi.name = m.Names[0].Name
 			u.methods[i] = mi
 		}
@@ -94,20 +93,20 @@ func literalize(id string) Literal {
 	case *ast.MapType:
 		return utype{
 			kind: reflect.Map,
-			key:  g.literalize(ident(id, e.Key)),
-			elem: g.literalize(ident(id, e.Value)),
+			key:  g.literalize(ctx, ident(id, e.Key)),
+			elem: g.literalize(ctx, ident(id, e.Value)),
 		}
 	case *ast.StarExpr:
 		return utype{
 			kind: reflect.Pointer,
-			elem: g.literalize(ident(id, e.X)),
+			elem: g.literalize(ctx, ident(id, e.X)),
 		}
 	case *ast.StructType:
 		u := utype{kind: reflect.Struct}
 		if e.Fields != nil {
 			u.fields = make([]*ufield, len(e.Fields.List))
 			for i, f := range e.Fields.List {
-				uf := &ufield{typ: g.literalize(ident(id, f.Type))}
+				uf := &ufield{typ: g.literalize(ctx, ident(id, f.Type))}
 				if uf.embedded = len(f.Names) == 0; uf.embedded {
 					uf.name = uf.typ.Name()
 				} else {
@@ -124,66 +123,67 @@ func literalize(id string) Literal {
 	// case *ast.Ident:
 	// 	return utype{typename: e.Name}
 	case *ast.SelectorExpr:
+		path := ident(id, e.X)
 		return utype{
-			pkg:      pkgutil.New(ident(id, e.X)),
+			pkg:      pkgx.Load(ctx, path),
 			typename: ident(id, e.Sel),
 		}
 	case *ast.IndexExpr:
-		u := g.literalize(ident(id, e.X)).(utype)
-		u.targs = []Literal{g.literalize(ident(id, e.Index))}
+		u := g.literalize(ctx, ident(id, e.X)).(utype)
+		u.targs = []Literal{g.literalize(ctx, ident(id, e.Index))}
 		return u
 	default:
 		ex, ok := e.(*ast.IndexListExpr)
 		must.BeTrueF(ok, "unexpected expr [%T] %s", e, ident(id, e))
-		u := g.literalize(ident(id, ex.X)).(utype)
+		u := g.literalize(ctx, ident(id, ex.X)).(utype)
 		u.targs = make([]Literal, len(ex.Indices))
 		for i, index := range ex.Indices {
-			u.targs[i] = g.literalize(ident(id, index))
+			u.targs[i] = g.literalize(ctx, ident(id, index))
 		}
 		return u
 	}
 }
 
-func literalizeRT(t reflect.Type) Literal {
+func literalizeRT(ctx context.Context, t reflect.Type) Literal {
 	if id := t.Name(); id != "" {
 		must.BeTrue(t.PkgPath() != "")
-		return g.literalize(t.PkgPath() + "." + id)
+		return g.literalize(ctx, t.PkgPath()+"."+id)
 	}
 
 	u := utype{kind: t.Kind()}
 	switch t.Kind() {
 	case reflect.Array:
-		u.len, u.elem = t.Len(), g.literalize(t.Elem())
+		u.len, u.elem = t.Len(), g.literalize(ctx, t.Elem())
 	case reflect.Chan:
-		u.dir, u.elem = NewChanDir(t.ChanDir()), g.literalize(t.Elem())
+		u.dir, u.elem = NewChanDir(t.ChanDir()), g.literalize(ctx, t.Elem())
 	case reflect.Func:
 		u.variadic = t.IsVariadic()
 		if n := t.NumIn(); n > 0 {
 			u.ins = make([]Literal, n)
 			for i := range u.ins {
-				u.ins[i] = g.literalize(t.In(i))
+				u.ins[i] = g.literalize(ctx, t.In(i))
 			}
 		}
 		if n := t.NumOut(); n > 0 {
 			u.outs = make([]Literal, n)
 			for i := range u.outs {
-				u.outs[i] = g.literalize(t.Out(i))
+				u.outs[i] = g.literalize(ctx, t.Out(i))
 			}
 		}
 	case reflect.Interface:
 		u.methods = make([]Literal, t.NumMethod())
 		for i := range u.methods {
 			m := t.Method(i)
-			mi := g.literalize(m.Type).(utype)
+			mi := g.literalize(ctx, m.Type).(utype)
 			mi.name = m.Name
 			u.methods[i] = mi
 		}
 	case reflect.Map:
-		u.key, u.elem = g.literalize(t.Key()), g.literalize(t.Elem())
+		u.key, u.elem = g.literalize(ctx, t.Key()), g.literalize(ctx, t.Elem())
 	case reflect.Pointer:
-		u.elem = g.literalize(t.Elem())
+		u.elem = g.literalize(ctx, t.Elem())
 	case reflect.Slice:
-		u.elem = g.literalize(t.Elem())
+		u.elem = g.literalize(ctx, t.Elem())
 	default:
 		must.BeTrue(t.Kind() == reflect.Struct)
 		u.fields = make([]*ufield, t.NumField())
@@ -191,7 +191,7 @@ func literalizeRT(t reflect.Type) Literal {
 			f := t.Field(i)
 			u.fields[i] = &ufield{
 				name:     f.Name,
-				typ:      g.literalize(f.Type),
+				typ:      g.literalize(ctx, f.Type),
 				tag:      string(f.Tag),
 				embedded: f.Anonymous,
 			}
@@ -200,33 +200,33 @@ func literalizeRT(t reflect.Type) Literal {
 	return u
 }
 
-func literalizeTT(t types.Type) Literal {
+func literalizeTT(ctx context.Context, t types.Type) Literal {
 	switch x := t.(type) {
 	case *types.Alias:
-		return g.literalize(types.Unalias(x))
+		return g.literalize(ctx, types.Unalias(x))
 	case *types.Array:
 		return utype{
 			kind: reflect.Array,
 			len:  int(x.Len()),
-			elem: g.literalize(x.Elem()),
+			elem: g.literalize(ctx, x.Elem()),
 		}
 	case *types.Chan:
 		return utype{
 			kind: reflect.Chan,
 			dir:  NewChanDir(x.Dir()),
-			elem: g.literalize(x.Elem()),
+			elem: g.literalize(ctx, x.Elem()),
 		}
 	case *types.Map:
 		return utype{
 			kind: reflect.Map,
-			key:  g.literalize(x.Key()),
-			elem: g.literalize(x.Elem()),
+			key:  g.literalize(ctx, x.Key()),
+			elem: g.literalize(ctx, x.Elem()),
 		}
 	case *types.Interface:
 		methods := make([]Literal, x.NumMethods())
 		for i := range methods {
 			m := x.Method(i)
-			mi := g.literalize(m.Signature()).(utype)
+			mi := g.literalize(ctx, m.Signature()).(utype)
 			mi.name = m.Name()
 			methods[i] = mi
 		}
@@ -237,7 +237,7 @@ func literalizeTT(t types.Type) Literal {
 	case *types.Pointer:
 		return utype{
 			kind: reflect.Pointer,
-			elem: g.literalize(x.Elem()),
+			elem: g.literalize(ctx, x.Elem()),
 		}
 	case *types.Signature:
 		u := utype{
@@ -247,27 +247,27 @@ func literalizeTT(t types.Type) Literal {
 		if n := x.Params().Len(); n > 0 {
 			u.ins = make([]Literal, n)
 			for i := range u.ins {
-				u.ins[i] = g.literalize(x.Params().At(i).Type())
+				u.ins[i] = g.literalize(ctx, x.Params().At(i).Type())
 			}
 		}
 		if n := x.Results().Len(); n > 0 {
 			u.outs = make([]Literal, n)
 			for i := range u.outs {
-				u.outs[i] = g.literalize(x.Results().At(i).Type())
+				u.outs[i] = g.literalize(ctx, x.Results().At(i).Type())
 			}
 		}
 		return u
 	case *types.Slice:
 		return utype{
 			kind: reflect.Slice,
-			elem: g.literalize(x.Elem()),
+			elem: g.literalize(ctx, x.Elem()),
 		}
 	case *types.Struct:
 		fields := make([]*ufield, x.NumFields())
 		for i := range fields {
 			f := x.Field(i)
 			ff := &ufield{
-				typ:      g.literalize(f.Type()),
+				typ:      g.literalize(ctx, f.Type()),
 				name:     f.Name(),
 				tag:      x.Tag(i),
 				embedded: f.Embedded(),
@@ -285,13 +285,16 @@ func literalizeTT(t types.Type) Literal {
 		xx, ok := t.(*types.Named)
 		must.BeTrueF(ok, "")
 		u := utype{
-			pkg:      pkgutil.NewT(xx.Obj().Pkg()),
 			typename: xx.Obj().Name(),
 		}
+		if p := xx.Obj().Pkg(); p != nil {
+			u.pkg = pkgx.Load(ctx, p.Path())
+		}
+
 		if xx.TypeArgs().Len() > 0 {
 			u.targs = make([]Literal, xx.TypeArgs().Len())
 			for i := range u.targs {
-				u.targs[i] = g.literalize(xx.TypeArgs().At(i))
+				u.targs[i] = g.literalize(ctx, xx.TypeArgs().At(i))
 			}
 		}
 		return u
@@ -299,7 +302,7 @@ func literalizeTT(t types.Type) Literal {
 }
 
 type utype struct {
-	pkg      pkgutil.Package
+	pkg      pkgx.Package
 	typename string
 	targs    []Literal
 	kind     reflect.Kind
@@ -344,13 +347,7 @@ func (t utype) Name() string {
 func (t utype) TypeLit(ctx context.Context) string {
 	if t.pkg != nil {
 		must.BeTrue(t.typename != "")
-
-		name := t.pkg.Name()
-		pkgnamer, _ := namer.FromContext(ctx)
-		if pkgnamer != nil {
-			name = pkgnamer.Package(t.pkg.Path())
-		}
-
+		name := pkgx.PackageName(ctx, t.pkg)
 		b := strings.Builder{}
 		if name != "" {
 			b.WriteString(name)
@@ -541,28 +538,29 @@ func (t utype) String() string {
 	}
 }
 
-func (t utype) TType() types.Type {
+func (t utype) TType(ctx context.Context) types.Type {
 	switch t.kind {
 	case reflect.Array:
-		return types.NewArray(t.elem.TType(), int64(t.len))
+		return types.NewArray(t.elem.TType(ctx), int64(t.len))
 	case reflect.Chan:
-		return types.NewChan(t.dir.TypesChanDir(), t.elem.TType())
+		return types.NewChan(t.dir.TypesChanDir(), t.elem.TType(ctx))
 	case reflect.Func:
 		ins := make([]*types.Var, len(t.ins))
 		for i, v := range t.ins {
-			var pkg *types.Package
-			if p := pkgutil.New(v.PkgPath()); p != nil {
-				pkg = p.Unwrap()
+			pkg := (*types.Package)(nil)
+			if v.PkgPath() != "" {
+				pkg = pkgx.Load(ctx, v.PkgPath()).Unwrap()
 			}
-			ins[i] = types.NewParam(0, pkg, "", v.TType())
+			ins[i] = types.NewParam(0, pkg, "", v.TType(ctx))
+
 		}
 		outs := make([]*types.Var, len(t.outs))
 		for i, v := range t.outs {
-			var pkg *types.Package
-			if p := pkgutil.New(v.PkgPath()); p != nil {
-				pkg = p.Unwrap()
+			pkg := (*types.Package)(nil)
+			if v.PkgPath() != "" {
+				pkg = pkgx.Load(ctx, v.PkgPath()).Unwrap()
 			}
-			outs[i] = types.NewParam(0, pkg, "", v.TType())
+			outs[i] = types.NewParam(0, pkg, "", v.TType(ctx))
 		}
 		return types.NewSignatureType(
 			nil, nil, nil,
@@ -573,37 +571,37 @@ func (t utype) TType() types.Type {
 		methods := make([]*types.Func, len(t.methods))
 		for i, m := range t.methods {
 			mm := m.(utype)
-			s := mm.TType().(*types.Signature)
+			s := mm.TType(ctx).(*types.Signature)
 			methods[i] = types.NewFunc(0, nil, mm.name, s)
 		}
 		return types.NewInterfaceType(methods, nil)
 	case reflect.Map:
-		return types.NewMap(t.key.TType(), t.elem.TType())
+		return types.NewMap(t.key.TType(ctx), t.elem.TType(ctx))
 	case reflect.Pointer:
-		return types.NewPointer(t.elem.TType())
+		return types.NewPointer(t.elem.TType(ctx))
 	case reflect.Slice:
-		return types.NewSlice(t.elem.TType())
+		return types.NewSlice(t.elem.TType(ctx))
 	case reflect.Struct:
 		fields := make([]*types.Var, len(t.fields))
 		tags := make([]string, len(t.fields))
 		for i, f := range t.fields {
 			pkg := (*types.Package)(nil)
-			if p := pkgutil.New(f.typ.PkgPath()); p != nil {
-				pkg = p.Unwrap()
+			if f.typ.PkgPath() != "" {
+				pkg = pkgx.Load(ctx, f.typ.PkgPath()).Unwrap()
 			}
-			fields[i] = types.NewField(0, pkg, f.name, f.typ.TType(), f.embedded)
+			fields[i] = types.NewField(0, pkg, f.name, f.typ.TType(ctx), f.embedded)
 			tags[i] = f.tag
 		}
 		return types.NewStruct(fields, tags)
 	default:
 		must.BeTrue(t.pkg != nil && t.typename != "")
-		typ := pkgutil.MustLookup[*types.Named](t.pkg, t.typename)
+		typ := pkgx.MustLookup[*types.Named](ctx, t.pkg.Path(), t.typename)
 		must.BeTrue(typ != nil)
 		must.BeTrue(typ.TypeParams().Len() == len(t.targs))
 		if len(t.targs) > 0 {
 			args := make([]types.Type, len(t.targs))
 			for i, arg := range t.targs {
-				args[i] = arg.TType()
+				args[i] = arg.TType(ctx)
 			}
 			typ = gtypex.Instantiate(typ, args).(*types.Named)
 		}

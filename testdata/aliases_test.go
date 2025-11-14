@@ -4,19 +4,17 @@ import (
 	"fmt"
 	"go/types"
 
-	"github.com/xoctopus/typex/pkgutil"
+	"github.com/xoctopus/pkgx"
 )
 
 func Example_aliases() {
-	pkg := pkgutil.New("github.com/xoctopus/typex/testdata")
-
 	for _, name := range []string{
 		"AliasInt",
 		"AliasUnion",
 		"AliasSerialized",
 		"AliasWithTArg",
 	} {
-		x := pkgutil.MustLookup[*types.Alias](pkg, name)
+		x := pkgx.MustLookup[*types.Alias](Context, "github.com/xoctopus/typex/testdata", name)
 		fmt.Println(x)
 
 		// x.

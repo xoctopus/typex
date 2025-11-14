@@ -11,33 +11,35 @@ import (
 	"testing"
 	"unsafe"
 
+	"github.com/xoctopus/pkgx"
 	"github.com/xoctopus/x/resultx"
 	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex/internal"
-	"github.com/xoctopus/typex/namer"
-	"github.com/xoctopus/typex/pkgutil"
 	"github.com/xoctopus/typex/testdata"
 )
 
 var (
+	ctx  = testdata.Context
+	path = "github.com/xoctopus/typex/testdata"
+
 	g = internal.Global()
-	p = pkgutil.New("github.com/xoctopus/typex/testdata")
+	p = pkgx.Load(ctx, "github.com/xoctopus/typex/testdata")
 
-	tTestdataTagged                 = pkgutil.MustLookup[*types.Named](p, "Tagged")
-	tTestdataTypedSliceAliasNetAddr = pkgutil.MustLookup[*types.Alias](p, "TypedSliceAliasNetAddr")
-	tTestdataMap                    = pkgutil.MustLookup[*types.Named](p, "Map")
-	tTestdataPassTypeParam          = pkgutil.MustLookup[*types.Named](p, "PassTypeParam")
-	tTestdataTypedArray             = pkgutil.MustLookup[*types.Named](p, "TypedArray")
-	tTestdataTypedSlice             = pkgutil.MustLookup[*types.Named](p, "TypedSlice")
+	tTestdataTagged                 = pkgx.MustLookup[*types.Named](ctx, path, "Tagged")
+	tTestdataTypedSliceAliasNetAddr = pkgx.MustLookup[*types.Alias](ctx, path, "TypedSliceAliasNetAddr")
+	tTestdataMap                    = pkgx.MustLookup[*types.Named](ctx, path, "Map")
+	tTestdataPassTypeParam          = pkgx.MustLookup[*types.Named](ctx, path, "PassTypeParam")
+	tTestdataTypedArray             = pkgx.MustLookup[*types.Named](ctx, path, "TypedArray")
+	tTestdataTypedSlice             = pkgx.MustLookup[*types.Named](ctx, path, "TypedSlice")
 
-	tFmtStringer   = pkgutil.MustLookupByPath[*types.Named]("fmt", "Stringer")
-	tIoReadCloser  = pkgutil.MustLookupByPath[*types.Named]("io", "ReadCloser")
-	tIoWriteCloser = pkgutil.MustLookupByPath[*types.Named]("io", "WriteCloser")
-	tIoReadWriter  = pkgutil.MustLookupByPath[*types.Named]("io", "ReadWriter")
+	tFmtStringer   = pkgx.MustLookup[*types.Named](ctx, "fmt", "Stringer")
+	tIoReadCloser  = pkgx.MustLookup[*types.Named](ctx, "io", "ReadCloser")
+	tIoWriteCloser = pkgx.MustLookup[*types.Named](ctx, "io", "WriteCloser")
+	tIoReadWriter  = pkgx.MustLookup[*types.Named](ctx, "io", "ReadWriter")
 
-	tNetAddr        = pkgutil.MustLookupByPath[*types.Named]("net", "Addr")
-	tError          = pkgutil.MustLookupByPath[*types.Signature]("errors", "New").Results().At(0).Type()
+	tNetAddr        = pkgx.MustLookup[*types.Named](ctx, "net", "Addr")
+	tError          = pkgx.MustLookup[*types.Signature](ctx, "errors", "New").Results().At(0).Type()
 	tEmptyInterface = types.NewInterfaceType(nil, nil)
 	tEmptyStruct    = types.NewStruct(nil, nil)
 )
@@ -95,14 +97,14 @@ var GlobalCases = []struct {
 	{
 		reflect.TypeFor[[3]iter.Seq[int]](),
 		types.NewArray(resultx.Unwrap(types.Instantiate(
-			nil, pkgutil.MustLookup[*types.Named](pkgutil.New("iter"), "Seq"),
+			nil, pkgx.MustLookup[*types.Named](ctx, "iter", "Seq"),
 			[]types.Type{types.Typ[types.Int]}, true,
 		)), 3),
 		"[3]iter.Seq[int]", "[3]iter.Seq[int]", "", "", "[3]iter.Seq[int]",
 	},
 	{
 		reflect.TypeFor[chan error](),
-		types.NewChan(types.SendRecv, g.TType(reflect.TypeFor[error]())),
+		types.NewChan(types.SendRecv, g.TType(ctx, reflect.TypeFor[error]())),
 		"chan error", "chan error", "", "", "chan error",
 	},
 	{
@@ -271,7 +273,7 @@ var GlobalCases = []struct {
 		reflect.TypeFor[testdata.TypedArray[chan error]](),
 		resultx.Unwrap(types.Instantiate(
 			nil, tTestdataTypedArray,
-			[]types.Type{types.NewChan(types.SendRecv, g.TType(reflect.TypeFor[error]()))},
+			[]types.Type{types.NewChan(types.SendRecv, g.TType(ctx, reflect.TypeFor[error]()))},
 			true,
 		)),
 		"github.com/xoctopus/typex/testdata.TypedArray[chan error]",
@@ -486,7 +488,7 @@ var GlobalCases = []struct {
 				),
 				types.NewTuple(
 					types.NewParam(0, nil, "", types.Typ[types.String]),
-					types.NewParam(0, nil, "", g.TType(reflect.TypeFor[error]())),
+					types.NewParam(0, nil, "", g.TType(ctx, reflect.TypeFor[error]())),
 				),
 				true,
 			)},
@@ -504,13 +506,13 @@ func TestGlobal(t *testing.T) {
 	t.Run("Wrap", func(t *testing.T) {
 		for _, c := range GlobalCases {
 			t.Log(c.wrapped)
-			Expect(t, g.Wrap(c.rt), Equal(c.wrapped))
-			Expect(t, g.Wrap(c.tt), Equal(c.wrapped))
+			Expect(t, g.Wrap(ctx, c.rt), Equal(c.wrapped))
+			Expect(t, g.Wrap(ctx, c.tt), Equal(c.wrapped))
 		}
 		t.Run("InvalidInput", func(t *testing.T) {
 			ExpectPanic(
 				t,
-				func() { _ = g.Wrap("") },
+				func() { _ = g.Wrap(ctx, "") },
 				ErrorContains("invalid wrap key type"),
 			)
 		})
@@ -519,14 +521,14 @@ func TestGlobal(t *testing.T) {
 		for _, c := range GlobalCases {
 			if c.rt == nil {
 				Expect(t, c.tt, BeNil[types.Type]())
-				Expect(t, g.Literalize(c.rt), BeNil[internal.Literal]())
-				Expect(t, g.Literalize(c.rt), BeNil[internal.Literal]())
+				Expect(t, g.Literalize(ctx, c.rt), BeNil[internal.Literal]())
+				Expect(t, g.Literalize(ctx, c.rt), BeNil[internal.Literal]())
 				continue
 			}
-			ur := g.Literalize(c.rt)
-			ut := g.Literalize(c.tt)
+			ur := g.Literalize(ctx, c.rt)
+			ut := g.Literalize(ctx, c.tt)
 
-			Expect(t, reflect.DeepEqual(ur, ut), BeTrue())
+			Expect(t, ur.String(), Equal(ut.String()))
 			Expect(t, ur.String(), Equal(c.id))
 			Expect(t, ur.PkgPath(), Equal(c.pkg))
 			Expect(t, ur.Name(), Equal(c.name))
@@ -539,7 +541,7 @@ func TestGlobal(t *testing.T) {
 		t.Run("InvalidInput", func(t *testing.T) {
 			ExpectPanic(
 				t,
-				func() { _ = g.Literalize("") },
+				func() { _ = g.Literalize(ctx, "") },
 				ErrorContains("invalid literalize key type"),
 			)
 		})
@@ -549,24 +551,26 @@ func TestGlobal(t *testing.T) {
 			if c.rt == nil {
 				continue
 			}
-			rtt := g.TType(c.rt)
-			utt := g.TType(g.Literalize(c.rt))
+			rtt := g.TType(ctx, c.rt)
+			utt := g.TType(ctx, g.Literalize(ctx, c.rt))
 			identical := types.Identical(utt, rtt)
 			Expect(t, identical, BeTrue())
 		}
 		t.Run("InvalidInput", func(t *testing.T) {
 			ExpectPanic(
 				t,
-				func() { _ = g.TType("") },
+				func() { _ = g.TType(ctx, "") },
 				ErrorContains("invalid ttype key type"),
 			)
 		})
 	})
 
 	t.Run("Namer", func(t *testing.T) {
-		ctx := namer.WithContext(context.Background(), &TestPackageNamer{})
-		u := g.Literalize(reflect.TypeFor[testdata.TypedArray[testdata.Map]]())
-		Expect(t, u.TypeLit(ctx), Equal("TypedArray[Map]"))
+		u := g.Literalize(
+			ctx,
+			reflect.TypeFor[testdata.TypedArray[testdata.Map]](),
+		)
+		Expect(t, u.TypeLit(pkgx.WithNamer(ctx, &TestPackageNamer{})), Equal("TypedArray[Map]"))
 	})
 }
 

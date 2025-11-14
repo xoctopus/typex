@@ -1,16 +1,17 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"go/types"
 	"reflect"
 	"strconv"
 	"strings"
 
+	"github.com/xoctopus/pkgx"
 	"github.com/xoctopus/x/misc/must"
 
 	"github.com/xoctopus/typex/internal/parsex"
-	"github.com/xoctopus/typex/pkgutil"
 )
 
 var (
@@ -19,34 +20,34 @@ var (
 	fieldInfo = parsex.FieldInfo
 )
 
-func wrap(id string) (wrapped string) {
+func wrap(ctx context.Context, id string) (wrapped string) {
 	// slice: []elem / array: [len]elem
 	if strings.HasPrefix(id, "[") {
 		idx, _, r := bracketed(id, '[')
 		ele := id[r+1:]
-		return "[" + idx + "]" + g.wrap(ele)
+		return "[" + idx + "]" + g.wrap(ctx, ele)
 	}
 
 	// map: map[key]elem
 	if strings.HasPrefix(id, "map[") {
 		key, _, r := bracketed(id, '[')
 		ele := id[r+1:]
-		return "map[" + g.wrap(key) + "]" + g.wrap(ele)
+		return "map[" + g.wrap(ctx, key) + "]" + g.wrap(ctx, ele)
 	}
 
 	// chan elem
 	if strings.HasPrefix(id, "chan ") {
-		return "chan " + g.wrap(id[5:])
+		return "chan " + g.wrap(ctx, id[5:])
 	}
 
 	// chan<- elem
 	if strings.HasPrefix(id, "chan<- ") {
-		return "chan<- " + g.wrap(id[7:])
+		return "chan<- " + g.wrap(ctx, id[7:])
 	}
 
 	// <-chan elem
 	if strings.HasPrefix(id, "<-chan ") {
-		return "<-chan " + g.wrap(id[7:])
+		return "<-chan " + g.wrap(ctx, id[7:])
 	}
 
 	// struct: struct { fields... }
@@ -67,7 +68,7 @@ func wrap(id string) (wrapped string) {
 				b.WriteString(name)
 				b.WriteString(" ")
 			}
-			b.WriteString(g.wrap(typ))
+			b.WriteString(g.wrap(ctx, typ))
 			if len(tag) > 0 {
 				b.WriteString(" ")
 				b.WriteString(strconv.Quote(tag))
@@ -90,7 +91,7 @@ func wrap(id string) (wrapped string) {
 			}
 			idx := strings.Index(m, "(")
 			name := m[0:idx]
-			typ := g.wrap("func" + m[idx:])
+			typ := g.wrap(ctx, "func"+m[idx:])
 			b.WriteString(name + typ[4:])
 		}
 		b.WriteString(" }")
@@ -107,7 +108,7 @@ func wrap(id string) (wrapped string) {
 			if i > 0 {
 				b.WriteString(", ")
 			}
-			b.WriteString(g.wrap(p))
+			b.WriteString(g.wrap(ctx, p))
 		}
 		b.WriteString(")")
 
@@ -128,7 +129,7 @@ func wrap(id string) (wrapped string) {
 			if i > 0 {
 				b.WriteString(", ")
 			}
-			b.WriteString(g.wrap(r))
+			b.WriteString(g.wrap(ctx, r))
 		}
 		b.WriteString(")")
 		return b.String()
@@ -136,12 +137,12 @@ func wrap(id string) (wrapped string) {
 
 	// pointer: *elem
 	if strings.HasPrefix(id, "*") {
-		return "*" + g.wrap(id[1:])
+		return "*" + g.wrap(ctx, id[1:])
 	}
 
 	// variadic: ...elem
 	if strings.HasPrefix(id, "...") {
-		return "..." + g.wrap(id[3:])
+		return "..." + g.wrap(ctx, id[3:])
 	}
 
 	// named: package_path.typename[type arguments...]
@@ -154,7 +155,7 @@ func wrap(id string) (wrapped string) {
 	must.BeTrue(dot != -1)
 	path, name = id[0:dot], id[dot+1:]
 	b := strings.Builder{}
-	b.WriteString(pkgutil.New(path).ID())
+	b.WriteString(pkgx.Load(ctx, path).WrapID())
 	b.WriteString(".")
 	b.WriteString(name)
 	if len(targs) > 0 {
@@ -163,23 +164,23 @@ func wrap(id string) (wrapped string) {
 			if i > 0 {
 				b.WriteString(",")
 			}
-			b.WriteString(g.wrap(targ))
+			b.WriteString(g.wrap(ctx, targ))
 		}
 		b.WriteString("]")
 	}
 	return b.String()
 }
 
-func wrapRT(t reflect.Type) string {
+func wrapRT(ctx context.Context, t reflect.Type) string {
 	if t.Name() != "" {
-		return g.wrap(t.PkgPath() + "." + t.Name())
+		return g.wrap(ctx, t.PkgPath()+"."+t.Name())
 	}
 
 	switch t.Kind() {
 	case reflect.Array:
-		return fmt.Sprintf("[%d]%s", t.Len(), g.wrap(t.Elem()))
+		return fmt.Sprintf("[%d]%s", t.Len(), g.wrap(ctx, t.Elem()))
 	case reflect.Chan:
-		return fmt.Sprintf("%s%s", NewChanDir(t.ChanDir()), g.wrap(t.Elem()))
+		return fmt.Sprintf("%s%s", NewChanDir(t.ChanDir()), g.wrap(ctx, t.Elem()))
 	case reflect.Func:
 		b := strings.Builder{}
 		b.WriteString("func(")
@@ -189,10 +190,10 @@ func wrapRT(t reflect.Type) string {
 			}
 			if i == t.NumIn()-1 && t.IsVariadic() {
 				b.WriteString("...")
-				b.WriteString(g.wrap(t.In(i).Elem()))
+				b.WriteString(g.wrap(ctx, t.In(i).Elem()))
 				break
 			}
-			b.WriteString(g.wrap(t.In(i)))
+			b.WriteString(g.wrap(ctx, t.In(i)))
 		}
 		b.WriteString(")")
 		if t.NumOut() == 0 {
@@ -200,7 +201,7 @@ func wrapRT(t reflect.Type) string {
 		}
 		b.WriteString(" ")
 		if t.NumOut() == 1 {
-			b.WriteString(g.wrap(t.Out(0)))
+			b.WriteString(g.wrap(ctx, t.Out(0)))
 			return b.String()
 		}
 		b.WriteString("(")
@@ -208,7 +209,7 @@ func wrapRT(t reflect.Type) string {
 			if i > 0 {
 				b.WriteString(", ")
 			}
-			b.WriteString(g.wrap(t.Out(i)))
+			b.WriteString(g.wrap(ctx, t.Out(i)))
 		}
 		b.WriteString(")")
 		return b.String()
@@ -220,18 +221,18 @@ func wrapRT(t reflect.Type) string {
 				b.WriteString("; ")
 			}
 			m := t.Method(i)
-			f := g.wrap(m.Type)
+			f := g.wrap(ctx, m.Type)
 			b.WriteString(m.Name)
 			b.WriteString(f[4:])
 		}
 		b.WriteString(" }")
 		return b.String()
 	case reflect.Map:
-		return fmt.Sprintf("map[%s]%s", g.wrap(t.Key()), g.wrap(t.Elem()))
+		return fmt.Sprintf("map[%s]%s", g.wrap(ctx, t.Key()), g.wrap(ctx, t.Elem()))
 	case reflect.Pointer:
-		return "*" + g.wrap(t.Elem())
+		return "*" + g.wrap(ctx, t.Elem())
 	case reflect.Slice:
-		return "[]" + g.wrap(t.Elem())
+		return "[]" + g.wrap(ctx, t.Elem())
 	default:
 		must.BeTrueF(t.Kind() == reflect.Struct, "unexpected kind %s", t.Kind())
 		if t.NumField() == 0 {
@@ -248,7 +249,7 @@ func wrapRT(t reflect.Type) string {
 				b.WriteString(f.Name)
 				b.WriteString(" ")
 			}
-			b.WriteString(g.wrap(f.Type))
+			b.WriteString(g.wrap(ctx, f.Type))
 			if len(f.Tag) > 0 {
 				b.WriteString(" ")
 				b.WriteString(strconv.Quote(string(f.Tag)))
@@ -259,16 +260,16 @@ func wrapRT(t reflect.Type) string {
 	}
 }
 
-func wrapTT(t types.Type) string {
+func wrapTT(ctx context.Context, t types.Type) string {
 	switch x := t.(type) {
 	case *types.Alias:
-		return g.wrap(types.Unalias(x))
+		return g.wrap(ctx, types.Unalias(x))
 	case *types.Array:
-		return fmt.Sprintf("[%d]%s", x.Len(), g.wrap(x.Elem()))
+		return fmt.Sprintf("[%d]%s", x.Len(), g.wrap(ctx, x.Elem()))
 	case *types.Chan:
-		return fmt.Sprintf("%s%s", NewChanDir(x.Dir()), g.wrap(x.Elem()))
+		return fmt.Sprintf("%s%s", NewChanDir(x.Dir()), g.wrap(ctx, x.Elem()))
 	case *types.Map:
-		return fmt.Sprintf("map[%s]%s", g.wrap(x.Key()), g.wrap(x.Elem()))
+		return fmt.Sprintf("map[%s]%s", g.wrap(ctx, x.Key()), g.wrap(ctx, x.Elem()))
 	case *types.Interface:
 		b := strings.Builder{}
 		b.WriteString("interface { ")
@@ -277,13 +278,13 @@ func wrapTT(t types.Type) string {
 				b.WriteString("; ")
 			}
 			m := x.Method(i)
-			f := g.wrap(m.Signature())
+			f := g.wrap(ctx, m.Signature())
 			b.WriteString(m.Name() + f[4:])
 		}
 		b.WriteString(" }")
 		return b.String()
 	case *types.Pointer:
-		return fmt.Sprintf("*%s", g.wrap(x.Elem()))
+		return fmt.Sprintf("*%s", g.wrap(ctx, x.Elem()))
 	case *types.Signature:
 		b := strings.Builder{}
 		b.WriteString("func(")
@@ -294,10 +295,10 @@ func wrapTT(t types.Type) string {
 			p := x.Params().At(i)
 			if x.Variadic() && i == x.Params().Len()-1 {
 				b.WriteString("...")
-				b.WriteString(g.wrap(p.Type().(*types.Slice).Elem()))
+				b.WriteString(g.wrap(ctx, p.Type().(*types.Slice).Elem()))
 				break
 			}
-			b.WriteString(g.wrap(p.Type()))
+			b.WriteString(g.wrap(ctx, p.Type()))
 		}
 		// params := make([]*types.Var, 0, x.Params().Len()+1)
 		// if x.Recv() != nil {
@@ -324,7 +325,7 @@ func wrapTT(t types.Type) string {
 		}
 		b.WriteString(" ")
 		if x.Results().Len() == 1 {
-			b.WriteString(g.wrap(x.Results().At(0).Type()))
+			b.WriteString(g.wrap(ctx, x.Results().At(0).Type()))
 			return b.String()
 		}
 		b.WriteString("(")
@@ -333,13 +334,13 @@ func wrapTT(t types.Type) string {
 				b.WriteString(", ")
 			}
 			r := x.Results().At(i)
-			b.WriteString(g.wrap(r.Type()))
+			b.WriteString(g.wrap(ctx, r.Type()))
 		}
 		b.WriteString(")")
 
 		return b.String()
 	case *types.Slice:
-		return fmt.Sprintf("[]%s", g.wrap(x.Elem()))
+		return fmt.Sprintf("[]%s", g.wrap(ctx, x.Elem()))
 	case *types.Struct:
 		if x.NumFields() == 0 {
 			return "struct {}"
@@ -355,7 +356,7 @@ func wrapTT(t types.Type) string {
 				b.WriteString(f.Name())
 				b.WriteString(" ")
 			}
-			b.WriteString(g.wrap(f.Type()))
+			b.WriteString(g.wrap(ctx, f.Type()))
 			if tag := x.Tag(i); len(tag) > 0 {
 				b.WriteString(" ")
 				b.WriteString(strconv.Quote(tag))
@@ -381,10 +382,10 @@ func wrapTT(t types.Type) string {
 					b.WriteString(",")
 				}
 				targ := n.TypeArgs().At(i)
-				b.WriteString(g.wrap(targ))
+				b.WriteString(g.wrap(ctx, targ))
 			}
 			b.WriteString("]")
 		}
-		return wrap(b.String())
+		return wrap(ctx, b.String())
 	}
 }

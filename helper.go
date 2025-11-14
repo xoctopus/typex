@@ -8,7 +8,3 @@ func Deref(t Type) Type {
 	}
 	return t
 }
-
-func WithWorkdir() {}
-
-func WithPackageLoadMode() {}

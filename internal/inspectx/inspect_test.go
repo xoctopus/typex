@@ -29,7 +29,7 @@ func TestInspectMethods(t *testing.T) {
 	for i := range rtyp.NumField() {
 		f := rtyp.Field(i)
 		rt := f.Type
-		tt := internal.Global().TType(rt)
+		tt := internal.Global().TType(testdata.Context, rt)
 		name := f.Name
 
 		for range 2 {
@@ -43,9 +43,9 @@ func TestInspectMethods(t *testing.T) {
 	}
 
 	t.Run("MultiLevelPointer", func(t *testing.T) {
-		tt := internal.Global().TType(reflect.TypeFor[**testdata.UnambiguousL1AndL2x2]())
+		tt := internal.Global().TType(testdata.Context, reflect.TypeFor[**testdata.UnambiguousL1AndL2x2]())
 		Expect(t, len(inspectx.InspectMethods(tt)), Equal(0))
-		tt = internal.Global().TType(reflect.TypeFor[*error]())
+		tt = internal.Global().TType(testdata.Context, reflect.TypeFor[*error]())
 		Expect(t, len(inspectx.InspectMethods(tt)), Equal(0))
 	})
 }
@@ -60,7 +60,7 @@ func TestInspectField(t *testing.T) {
 		t.Run(fi.Name, func(t *testing.T) {
 			for j := range rti.NumField() {
 				fj := rti.Field(j)
-				tt := internal.Global().TType(rti)
+				tt := internal.Global().TType(testdata.Context, rti)
 
 				tf := inspectx.FieldByName(tt, fj.Name)
 				Expect(t, tf.Var().Name(), Equal(fj.Name))

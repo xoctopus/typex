@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	instantiations [2]func(any) x.Type
+	instantiations [2]func(context.Context, any) x.Type
 
 	Bundles = []*CompareBundles{
 		{name: "Stringer", rtyp: reflect.TypeFor[fmt.Stringer]()},
@@ -34,7 +34,7 @@ var (
 	}
 )
 
-func RegisterInstantiations(f1, f2 func(any) x.Type) {
+func RegisterInstantiations(f1, f2 func(context.Context, any) x.Type) {
 	instantiations[0] = f1
 	instantiations[1] = f2
 
@@ -73,9 +73,9 @@ func (b *CompareBundles) Name() string {
 func (b *CompareBundles) Init() {
 	b.types = []*CompareBundle{
 		{"ReflectType", b.rtyp},
-		{"TypesType", internal.Global().TType(b.rtyp)},
-		{"RType", instantiations[0](b.rtyp)},
-		{"TType", instantiations[1](b.rtyp)},
+		{"TypesType", internal.Global().TType(Context, b.rtyp)},
+		{"RType", instantiations[0](Context, b.rtyp)},
+		{"TType", instantiations[1](Context, b.rtyp)},
 	}
 }
 
@@ -101,8 +101,8 @@ func (bc *Bundle) Init() {
 			bc.cases = append(bc.cases, &Case{
 				name: name,
 				r:    t,
-				rt:   instantiations[0](t),
-				tt:   instantiations[1](t),
+				rt:   instantiations[0](Context, t),
+				tt:   instantiations[1](Context, t),
 			})
 			t = reflect.PointerTo(t)
 			name = name + "Ptr"

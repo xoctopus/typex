@@ -11,14 +11,15 @@ import (
 	"github.com/xoctopus/typex/internal"
 )
 
-func NewRType(t reflect.Type) Type {
+func NewRType(ctx context.Context, t reflect.Type) Type {
 	must.NotNilF(t, "invalid reflect.Type")
-	return &rtype{t: t, u: internal.Global().Literalize(t)}
+	return &rtype{ctx: ctx, t: t, u: internal.Global().Literalize(ctx, t)}
 }
 
 type rtype struct {
-	t reflect.Type
-	u internal.Literal
+	ctx context.Context
+	t   reflect.Type
+	u   internal.Literal
 }
 
 func (t *rtype) Unwrap() any {
@@ -56,7 +57,7 @@ func (t *rtype) Implements(u any) bool {
 		return false
 	case types.Type:
 		if i, ok := x.Underlying().(*types.Interface); ok {
-			return types.Implements(internal.Global().TType(t.t), i)
+			return types.Implements(internal.Global().TType(t.ctx, t.t), i)
 		}
 		return false
 	default:
@@ -71,7 +72,7 @@ func (t *rtype) AssignableTo(u any) bool {
 	case reflect.Type:
 		return t.t.AssignableTo(x)
 	case types.Type:
-		return types.AssignableTo(internal.Global().TType(t.t), x)
+		return types.AssignableTo(internal.Global().TType(t.ctx, t.t), x)
 	default:
 		return false
 	}
@@ -84,7 +85,7 @@ func (t *rtype) ConvertibleTo(u any) bool {
 	case reflect.Type:
 		return t.t.ConvertibleTo(x)
 	case types.Type:
-		return types.ConvertibleTo(internal.Global().TType(t.t), x)
+		return types.ConvertibleTo(internal.Global().TType(t.ctx, t.t), x)
 	default:
 		return false
 	}
@@ -94,14 +95,14 @@ func (t *rtype) Comparable() bool { return t.t.Comparable() }
 
 func (t *rtype) Key() Type {
 	if t.Kind() == reflect.Map {
-		return NewRType(t.t.Key())
+		return NewRType(t.ctx, t.t.Key())
 	}
 	return nil
 }
 
 func (t *rtype) Elem() Type {
 	if reflectx.CanElem(t.t) {
-		return NewRType(t.t.Elem())
+		return NewRType(t.ctx, t.t.Elem())
 	}
 	return nil
 }
@@ -122,7 +123,7 @@ func (t *rtype) NumField() int {
 
 func (t *rtype) Field(i int) StructField {
 	if i >= 0 && i < t.NumField() {
-		return &RStructField{StructField: t.t.Field(i)}
+		return &RStructField{ctx: t.ctx, StructField: t.t.Field(i)}
 	}
 	return nil
 }
@@ -130,7 +131,7 @@ func (t *rtype) Field(i int) StructField {
 func (t *rtype) FieldByName(name string) (StructField, bool) {
 	if t.Kind() == reflect.Struct {
 		if f, ok := t.t.FieldByName(name); ok {
-			return &RStructField{f}, true
+			return &RStructField{ctx: t.ctx, StructField: f}, true
 		}
 	}
 	return nil, false
@@ -139,7 +140,7 @@ func (t *rtype) FieldByName(name string) (StructField, bool) {
 func (t *rtype) FieldByNameFunc(match func(string) bool) (StructField, bool) {
 	if t.Kind() == reflect.Struct {
 		if f, ok := t.t.FieldByNameFunc(match); ok {
-			return &RStructField{f}, true
+			return &RStructField{ctx: t.ctx, StructField: f}, true
 		}
 	}
 	return nil, false
@@ -151,14 +152,14 @@ func (t *rtype) NumMethod() int {
 
 func (t *rtype) Method(i int) Method {
 	if i >= 0 && i < t.NumMethod() {
-		return &RMethod{t.t.Method(i)}
+		return &RMethod{ctx: t.ctx, Method: t.t.Method(i)}
 	}
 	return nil
 }
 
 func (t *rtype) MethodByName(name string) (Method, bool) {
 	if m, ok := t.t.MethodByName(name); ok {
-		return &RMethod{m}, true
+		return &RMethod{ctx: t.ctx, Method: m}, true
 	}
 	return nil, false
 }
@@ -179,7 +180,7 @@ func (t *rtype) NumIn() int {
 
 func (t *rtype) In(i int) Type {
 	if t.Kind() == reflect.Func && i >= 0 && i < t.t.NumIn() {
-		return NewRType(t.t.In(i))
+		return NewRType(t.ctx, t.t.In(i))
 	}
 	return nil
 }
@@ -193,12 +194,13 @@ func (t *rtype) NumOut() int {
 
 func (t *rtype) Out(i int) Type {
 	if t.Kind() == reflect.Func && i >= 0 && i < t.t.NumOut() {
-		return NewRType(t.t.Out(i))
+		return NewRType(t.ctx, t.t.Out(i))
 	}
 	return nil
 }
 
 type RStructField struct {
+	ctx context.Context
 	reflect.StructField
 }
 
@@ -211,7 +213,7 @@ func (f *RStructField) Name() string {
 }
 
 func (f *RStructField) Type() Type {
-	return NewRType(f.StructField.Type)
+	return NewRType(f.ctx, f.StructField.Type)
 }
 
 func (f *RStructField) Tag() reflect.StructTag {
@@ -223,6 +225,7 @@ func (f *RStructField) Anonymous() bool {
 }
 
 type RMethod struct {
+	ctx context.Context
 	reflect.Method
 }
 
@@ -235,5 +238,5 @@ func (m *RMethod) Name() string {
 }
 
 func (m *RMethod) Type() Type {
-	return NewRType(m.Method.Type)
+	return NewRType(m.ctx, m.Method.Type)
 }

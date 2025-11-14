@@ -1,9 +1,13 @@
 package typex_test
 
 import (
+	"context"
+	"os"
 	"reflect"
 	"testing"
 
+	"github.com/xoctopus/pkgx"
+	"github.com/xoctopus/x/misc/must"
 	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex"
@@ -16,23 +20,27 @@ type (
 )
 
 func TestDeref(t *testing.T) {
-	rt := typex.NewRType(reflect.TypeOf(T1{}))
+	ctx := pkgx.WithWorkdir(
+		pkgx.WithTests(context.Background()),
+		must.NoErrorV(os.Getwd()),
+	)
+	rt := typex.NewRType(ctx, reflect.TypeOf(T1{}))
 	dt := typex.Deref(rt)
 	Expect(t, dt.String(), Equal(rt.String()))
 
-	rt = typex.NewRType(reflect.TypeOf(*new(T2)))
+	rt = typex.NewRType(ctx, reflect.TypeOf(*new(T2)))
 	dt = typex.Deref(rt)
 	Expect(t, dt.String(), Equal(rt.String()))
 
-	rt = typex.NewRType(reflect.TypeOf(new(int)))
+	rt = typex.NewRType(ctx, reflect.TypeOf(new(int)))
 	dt = typex.Deref(rt)
 	Expect(t, dt.String(), Equal("int"))
 
-	rt = typex.NewRType(reflect.TypeFor[*****int]())
+	rt = typex.NewRType(ctx, reflect.TypeFor[*****int]())
 	dt = typex.Deref(rt)
 	Expect(t, dt.String(), Equal("int"))
 
-	rt = typex.NewRType(reflect.TypeFor[T3]())
+	rt = typex.NewRType(ctx, reflect.TypeFor[T3]())
 	dt = typex.Deref(rt)
 	Expect(t, dt.String(), Equal("github.com/xoctopus/typex_test.T3"))
 }

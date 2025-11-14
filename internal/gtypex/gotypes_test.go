@@ -1,16 +1,19 @@
 package gtypex_test
 
 import (
+	"context"
 	"go/types"
 	"net"
+	"os"
 	"reflect"
 	"testing"
 
+	"github.com/xoctopus/pkgx"
+	"github.com/xoctopus/x/misc/must"
 	. "github.com/xoctopus/x/testx"
 
 	"github.com/xoctopus/typex/internal"
 	"github.com/xoctopus/typex/internal/gtypex"
-	"github.com/xoctopus/typex/pkgutil"
 	"github.com/xoctopus/typex/testdata"
 )
 
@@ -28,11 +31,9 @@ type Generic[T any] struct {
 	GenericNamed testdata.PassTypeParam[T, net.Addr]
 }
 
-var path = "github.com/xoctopus/typex/internal/gtypex_test"
-
 func TestUnderlying(t *testing.T) {
 	t.Run("SameUnderlying", func(t *testing.T) {
-		sig := pkgutil.MustLookup[*types.Signature](pkgutil.New("errors"), "New")
+		sig := pkgx.MustLookup[*types.Signature](context.Background(), "errors", "New")
 		for _, v := range []types.Type{
 			types.Typ[types.Int],                                // basic
 			types.NewArray(types.Typ[types.Int], 1),             // array
@@ -48,12 +49,22 @@ func TestUnderlying(t *testing.T) {
 	})
 
 	t.Run("Generic", func(t *testing.T) {
+		path := "github.com/xoctopus/typex/internal/gtypex_test"
+		ctx := context.Background()
+
+		ctx = pkgx.WithTests(ctx)
+		ctx = pkgx.WithWorkdir(ctx, must.NoErrorV(os.Getwd()))
+		ctx = pkgx.WithLoadMode(ctx, pkgx.DefaultLoadMode)
+
+		generic := pkgx.MustLookup[*types.Named](ctx, path, "Generic").Underlying()
+
 		instUnderlying := gtypex.Instantiate(
-			pkgutil.MustLookupByPath[*types.Named](path, "Generic").Underlying(),
+			// pkgx.MustLookup[*types.Named](ctx, path, "Generic").Underlying(),
+			generic,
 			[]types.Type{types.Typ[types.Int]},
 		)
 		underlyingInst := gtypex.Underlying(
-			internal.Global().TType(reflect.TypeFor[Generic[int]]()),
+			internal.Global().TType(ctx, reflect.TypeFor[Generic[int]]()),
 		)
 		Expect(t, instUnderlying.String(), Equal(underlyingInst.String()))
 	})
