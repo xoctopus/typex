@@ -1,11 +1,11 @@
 module github.com/xoctopus/typex
 
-go 1.25.3
+go 1.25.4
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/xoctopus/pkgx v0.1.1-0.20251114060915-3d066224b210
-	github.com/xoctopus/x v0.2.1-0.20251113131642-d51532724ff6
+	github.com/xoctopus/pkgx v0.1.1-0.20251114063918-712b03bba5b6
+	github.com/xoctopus/x v0.2.1-0.20251114063749-affe921f19c0
 )
 
 require (
