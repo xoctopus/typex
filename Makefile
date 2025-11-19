@@ -1,4 +1,5 @@
-PACKAGES=$(shell go list ./... | grep -E -v 'pb$|testdata|mock|proto|example')
+PACKAGES=$(shell go list ./... | grep -E -v 'pb$|testdata|mock|proto|example|testx/internal')
+IGNORED=_gen.go|.pb.go|_mock.go|_genx_
 MOD=$(shell cat go.mod | grep ^module -m 1 | awk '{ print $$2; }' || '')
 MOD_NAME=$(shell basename $(MOD))
 
@@ -20,33 +21,37 @@ BUILD_AT=$(shell date "+%Y%m%d%H%M%S")
 
 show:
 	@echo "packages:"
-	@for item in $(PACKAGES); do echo "\t$$item"; done
+	@for item in $(PACKAGES); do echo "    $$item"; done
 	@echo "module:"
-	@echo "\tpath=$(MOD)"
-	@echo "\tmodule=$(MOD_NAME)"
+	@echo "    path=$(MOD)"
+	@echo "    module=$(MOD_NAME)"
 	@echo "tools:"
-	@echo "\tbuild=$(GOBUILD)"
-	@echo "\ttest=$(GOTEST)"
-	@echo "\tgoimports-reviser=$(shell which goimports-reviser)"
-	@echo "\txgo=$(shell which xgo)"
-	@echo "\tineffassign=$(shell which ineffassign)"
-	@echo "\tgocyclo=$(shell which gocyclo)"
-	@echo "git info:"
-	@echo "\tcommit_id=$(GIT_COMMIT)\n\ttag=$(GIT_TAG)\n\tbranch=$(GIT_BRANCH)\n\tbuild_time=$(BUILD_AT)\n\tname=$(MOD_NAME)"
+	@echo "    build=$(GOBUILD)"
+	@echo "    test=$(GOTEST)"
+	@echo "    goimports-reviser=$(shell which goimports-reviser)"
+	@echo "    xgo=$(shell which xgo)"
+	@echo "    ineffassign=$(shell which ineffassign)"
+	@echo "    gocyclo=$(shell which gocyclo)"
+	@echo "git:"
+	@echo "    commit_id=$(GIT_COMMIT)"
+	@echo "    tag=$(GIT_TAG)"
+	@echo "    branch=$(GIT_BRANCH)"
+	@echo "    build_time=$(BUILD_AT)"
+	@echo "    name=$(MOD_NAME)"
 
 # install dependencies
 dep:
 	@echo "==> installing dependencies"
 	@if [ "${DEP_FMT}" != "0" ]; then \
-		echo "\tgoimports-reviser for format sources"; \
+		echo "    goimports-reviser for format sources"; \
 		go install github.com/incu6us/goimports-reviser/v3@latest; \
 	fi
 	@if [ "${GOTEST}" = "xgo" ] && [ "${DEP_XGO}" != "0" ]; then \
-		echo "\txgo for unit test"; \
+		echo "    xgo for unit test"; \
 		go install github.com/xhd2015/xgo/cmd/xgo@latest; \
 	fi
 	@if [ "${DEP_INEFFASSIGN}" != "0" ]; then \
-		echo "\tineffassign for detecting ineffectual assignments"; \
+		echo "    ineffassign for detecting ineffectual assignments"; \
 		go install github.com/gordonklaus/ineffassign@latest; \
 	fi
 	@if [ "${DEP_GOCYCLO}" != "0" ]; then \
@@ -60,25 +65,26 @@ dep:
 
 upgrade-dep:
 	@echo "==> upgrading dependencies"
-	@echo "\tgoimports-reviser for format sources"
+	@echo "    goimports-reviser for format sources"
 	@go install github.com/incu6us/goimports-reviser/v3@latest
-	@echo "\tineffassign for detecting ineffectual assignments"
+	@echo "    ineffassign for detecting ineffectual assignments"
 	@go install github.com/gordonklaus/ineffassign@latest
-	@echo "\tgocyclo for calculating cyclomatic complexities of functions"
+	@echo "    gocyclo for calculating cyclomatic complexities of functions"
 	@go install github.com/gordonklaus/ineffassign@latest
-	@echo "\tgolangci-lint for code static checking"
+	@echo "    golangci-lint for code static checking"
 	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	@if [ "${GOTEST}" = "xgo" ]; then \
-		echo "\txgo for unit test"; \
+		echo "    xgo for unit test"; \
 		go install github.com/xhd2015/xgo/cmd/xgo@latest; \
 	fi
 
 update:
-	@go get -u all
+	@GOWORK=off go get -u all
+	@GOWORK=off go mod tidy
 
 tidy:
 	@echo "==> tidy"
-	@go mod tidy
+	@GOWORK=off go mod tidy
 
 test: dep tidy
 	@echo "==> run unit test"
@@ -91,37 +97,38 @@ test: dep tidy
 cover: dep tidy
 	@echo "==> run unit test with coverage"
 	@GOWORK=off $(GOTEST) test -failfast -parallel 1 -gcflags="all=-N -l" ${PACKAGES} -covermode=count -coverprofile=cover.out
+	@grep -vE '_gen.go|.pb.go|_mock.go|_genx_|main.go' cover.out > cover2.out && mv cover2.out cover.out
 
 ci-cover:
 	@if [ "${GOTEST}" = "xgo" ]; then \
 		go install github.com/xhd2015/xgo/cmd/xgo@latest; \
 	fi
-	@$(GOTEST) test -failfast -parallel 1 -gcflags="all=-N -l" ${PACKAGES} -covermode=count -coverprofile=cover.out
+	@GOWORK=off $(GOTEST) test -failfast -parallel 1 -gcflags="all=-N -l" ${PACKAGES} -covermode=count -coverprofile=cover.out
 
 view-cover: cover
 	@echo "==> run unit test with coverage and view"
-	@go tool cover -html cover.out
+	@GOWORK=off $(GOBUILD) tool cover -html cover.out
 
 fmt: dep clean
-	@echo "==> format code"
-	@goimports-reviser -rm-unused -set-alias -output write \
+	@echo "==> formating code"
+	@goimports-reviser -rm-unused \
 		-imports-order 'std,general,company,project' \
+		-project-name ${MOD} \
 		-excludes '.git/,.xgo/,*.pb.go,*_generated.go' ./...
 
 lint: dep
 	@echo "==> static check"
-	@echo "\t>>>static checking"
-	@go vet ./...
-	@echo "\tdone"
-	@echo "\t>>>detecting ineffectual assignments"
+	@echo "    >>>static checking"
+	@GOWORK=off $(GOBUILD) vet ./...
+	@echo "    done"
+	@echo "    >>>detecting ineffectual assignments"
 	@ineffassign ./...
-	@echo "\tdone"
-	@echo "\t>>>detecting cyclomatic complexities over 10 and average"
+	@echo "    done"
+	@echo "    >>>detecting cyclomatic complexities over 10 and average"
 	@gocyclo -over 10 -avg -ignore '_test|_test.go|vendor|pb' . || true
-	@echo "\tdone"
-	@echo "\t>>>run golangci-lint"
+	@echo "    done"
 
-pre-commit: dep lint fmt cover clean
+pre-commit: dep update lint fmt view-cover
 
 clean:
 	@find . -name cover.out | xargs rm -rf
