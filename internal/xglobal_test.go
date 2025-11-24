@@ -570,7 +570,11 @@ func TestGlobal(t *testing.T) {
 			ctx,
 			reflect.TypeFor[testdata.TypedArray[testdata.Map]](),
 		)
-		Expect(t, u.TypeLit(pkgx.WithNamer(ctx, &TestPackageNamer{})), Equal("TypedArray[Map]"))
+		Expect(
+			t,
+			u.TypeLit(pkgx.CtxPkgNamer.With(ctx, &TestPackageNamer{})),
+			Equal("TypedArray[Map]"),
+		)
 	})
 }
 

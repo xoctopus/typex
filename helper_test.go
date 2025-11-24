@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/xoctopus/pkgx"
+	"github.com/xoctopus/x/contextx"
 	"github.com/xoctopus/x/misc/must"
 	. "github.com/xoctopus/x/testx"
 
@@ -20,10 +21,11 @@ type (
 )
 
 func TestDeref(t *testing.T) {
-	ctx := pkgx.WithWorkdir(
-		pkgx.WithTests(context.Background()),
-		must.NoErrorV(os.Getwd()),
-	)
+	ctx := contextx.Compose(
+		pkgx.CtxLoadTests.Carry(true),
+		pkgx.CtxWorkdir.Carry(must.NoErrorV(os.Getwd())),
+	)(context.Background())
+
 	rt := typex.NewRType(ctx, reflect.TypeOf(T1{}))
 	dt := typex.Deref(rt)
 	Expect(t, dt.String(), Equal(rt.String()))

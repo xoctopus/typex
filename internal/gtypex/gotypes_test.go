@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/xoctopus/pkgx"
+	"github.com/xoctopus/x/contextx"
 	"github.com/xoctopus/x/misc/must"
 	. "github.com/xoctopus/x/testx"
 
@@ -50,11 +51,11 @@ func TestUnderlying(t *testing.T) {
 
 	t.Run("Generic", func(t *testing.T) {
 		path := "github.com/xoctopus/typex/internal/gtypex_test"
-		ctx := context.Background()
-
-		ctx = pkgx.WithTests(ctx)
-		ctx = pkgx.WithWorkdir(ctx, must.NoErrorV(os.Getwd()))
-		ctx = pkgx.WithLoadMode(ctx, pkgx.DefaultLoadMode)
+		ctx := contextx.Compose(
+			pkgx.CtxLoadTests.Carry(true),
+			pkgx.CtxWorkdir.Carry(must.NoErrorV(os.Getwd())),
+			pkgx.CtxLoadMode.Carry(pkgx.DefaultLoadMode),
+		)(context.Background())
 
 		generic := pkgx.MustLookup[*types.Named](ctx, path, "Generic").Underlying()
 
