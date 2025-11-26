@@ -15,7 +15,9 @@ import (
 )
 
 type (
-	T1 struct{}
+	T1 struct {
+		A string
+	}
 	T2 *int
 	T3 *T1
 )
@@ -45,4 +47,17 @@ func TestDeref(t *testing.T) {
 	rt = typex.NewRType(ctx, reflect.TypeFor[T3]())
 	dt = typex.Deref(rt)
 	Expect(t, dt.String(), Equal("github.com/xoctopus/typex_test.T3"))
+}
+
+func TestPosOfStructField(t *testing.T) {
+	ctx := contextx.Compose(
+		pkgx.CtxLoadTests.Carry(true),
+		pkgx.CtxWorkdir.Carry(must.NoErrorV(os.Getwd())),
+	)(context.Background())
+
+	tt := typex.NewTType(ctx, reflect.TypeOf(T1{}))
+	Expect(t, typex.PosOfStructField(tt.Field(0)), NotEqual(0))
+
+	rt := typex.NewRType(ctx, reflect.TypeOf(T1{}))
+	Expect(t, typex.PosOfStructField(rt.Field(0)), Equal(0))
 }

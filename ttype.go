@@ -309,6 +309,10 @@ type TStructField struct {
 	tag string
 }
 
+func (f *TStructField) Pos() int {
+	return int(f.v.Pos())
+}
+
 func (f *TStructField) PkgPath() string {
 	if pkg := f.v.Pkg(); pkg != nil && !f.v.Exported() {
 		return pkg.Path()
