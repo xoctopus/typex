@@ -1,4 +1,4 @@
-package parsex
+package typx
 
 import (
 	"slices"

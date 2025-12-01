@@ -1,4 +1,4 @@
-package typex
+package typx
 
 import (
 	"context"
@@ -8,37 +8,27 @@ import (
 	"github.com/pkg/errors"
 	"github.com/xoctopus/x/misc/must"
 
-	"github.com/xoctopus/typex/internal"
-	"github.com/xoctopus/typex/internal/gtypex"
-	"github.com/xoctopus/typex/internal/inspectx"
+	"github.com/xoctopus/typex/internal/typx"
 )
 
-func NewTType(ctx context.Context, t any) Type {
+func NewTType(t types.Type) Type {
 	var (
-		tt    types.Type
+		xt    types.Type
 		alias *types.Alias
 	)
-	switch t.(type) {
-	case reflect.Type:
-		tt = internal.Global().TType(ctx, t)
-	case types.Type:
-		tt = t.(types.Type)
-		switch xt := tt.(type) {
-		case *types.Union, *types.Tuple, *types.TypeParam:
-			panic(errors.Errorf("invalid NewTType by types.Type for `%T`", xt))
-		case *types.Alias:
-			tt = xt.Rhs()
-			alias = xt
-		}
+	switch x := t.(type) {
+	case *types.Union, *types.Tuple, *types.TypeParam:
+		panic(errors.Errorf("invalid NewTType by types.Type from `%T`", x))
+	case *types.Alias:
+		xt = x.Rhs()
+		alias = x
 	default:
-		panic(errors.Errorf("invalid NewTType type `%T`", t))
+		xt = x
 	}
-
 	return &ttype{
-		ctx:     ctx,
-		t:       tt,
-		u:       internal.Global().Literalize(ctx, tt),
-		methods: inspectx.InspectMethods(tt),
+		methods: typx.InspectMethods(xt),
+		t:       xt,
+		u:       typx.NewLitType(xt),
 		alias:   alias,
 	}
 }
@@ -47,7 +37,7 @@ type ttype struct {
 	ctx     context.Context
 	alias   *types.Alias
 	t       types.Type
-	u       internal.Literal
+	u       *typx.LitType
 	methods []*types.Func
 }
 
@@ -58,7 +48,7 @@ func (t *ttype) Unwrap() any {
 func (t *ttype) Kind() reflect.Kind {
 	switch t.t.(type) {
 	case *types.Basic:
-		return t.u.(internal.Builtin).Kind()
+		return t.u.Kind()
 	case *types.Interface:
 		return reflect.Interface
 	case *types.Struct:
@@ -78,7 +68,7 @@ func (t *ttype) Kind() reflect.Kind {
 	default:
 		x, ok := t.t.(*types.Named)
 		must.BeTrue(ok)
-		return NewTType(t.ctx, x.Underlying()).Kind()
+		return NewTType(x.Underlying()).Kind()
 	}
 }
 
@@ -94,10 +84,6 @@ func (t *ttype) String() string {
 	return t.u.String()
 }
 
-func (t *ttype) TypeLit(ctx context.Context) string {
-	return t.u.TypeLit(ctx)
-}
-
 func (t *ttype) Implements(u any) bool {
 	switch x := u.(type) {
 	case Type:
@@ -111,7 +97,7 @@ func (t *ttype) Implements(u any) bool {
 		if x.Kind() != reflect.Interface {
 			return false
 		}
-		return t.Implements(NewTType(t.ctx, x))
+		return t.Implements(typx.NewLitType(x).Type())
 	default:
 		return false
 	}
@@ -122,7 +108,7 @@ func (t *ttype) AssignableTo(u any) bool {
 	case Type:
 		return t.AssignableTo(x.Unwrap())
 	case reflect.Type:
-		return types.AssignableTo(t.t, internal.Global().TType(t.ctx, x))
+		return types.AssignableTo(t.t, typx.NewLitType(x).Type())
 	case types.Type:
 		return types.AssignableTo(t.t, x)
 	default:
@@ -135,7 +121,7 @@ func (t *ttype) ConvertibleTo(u any) bool {
 	case Type:
 		return t.ConvertibleTo(x.Unwrap())
 	case reflect.Type:
-		return types.ConvertibleTo(t.t, internal.Global().TType(t.ctx, x))
+		return types.ConvertibleTo(t.t, typx.NewLitType(x).Type())
 	case types.Type:
 		return types.ConvertibleTo(t.t, x)
 	default:
@@ -144,16 +130,15 @@ func (t *ttype) ConvertibleTo(u any) bool {
 }
 
 func (t *ttype) Comparable() bool {
-	return types.Comparable(gtypex.Underlying(t.t))
+	return types.Comparable(typx.Underlying(t.t))
 }
 
 func (t *ttype) Key() Type {
 	switch x := t.t.(type) {
 	case interface{ Key() types.Type }:
-		return NewTType(t.ctx, x.Key())
+		return NewTType(x.Key())
 	case *types.Named:
-		underlying := gtypex.Underlying(x)
-		return NewTType(t.ctx, underlying).Key()
+		return NewTType(typx.Underlying(x)).Key()
 	default:
 		return nil
 	}
@@ -162,9 +147,9 @@ func (t *ttype) Key() Type {
 func (t *ttype) Elem() Type {
 	switch x := t.t.(type) {
 	case interface{ Elem() types.Type }:
-		return NewTType(t.ctx, x.Elem())
+		return NewTType(x.Elem())
 	case *types.Named:
-		return NewTType(t.ctx, gtypex.Underlying(x)).Elem()
+		return NewTType(typx.Underlying(x)).Elem()
 	default:
 		return nil
 	}
@@ -175,7 +160,7 @@ func (t *ttype) Len() int {
 	case *types.Array:
 		return int(x.Len())
 	case *types.Named:
-		return NewTType(t.ctx, gtypex.Underlying(x)).Len()
+		return NewTType(typx.Underlying(x)).Len()
 	default:
 		return 0
 	}
@@ -186,7 +171,7 @@ func (t *ttype) NumField() int {
 	case *types.Struct:
 		return x.NumFields()
 	case *types.Named:
-		return NewTType(t.ctx, x.Underlying()).NumField()
+		return NewTType(x.Underlying()).NumField()
 	default:
 		return 0
 	}
@@ -200,14 +185,14 @@ func (t *ttype) Field(i int) StructField {
 		}
 		return nil
 	case *types.Named:
-		return NewTType(t.ctx, gtypex.Underlying(x)).Field(i)
+		return NewTType(typx.Underlying(x)).Field(i)
 	default:
 		return nil
 	}
 }
 
 func (t *ttype) FieldByName(name string) (StructField, bool) {
-	f := inspectx.FieldByName(t.t, name)
+	f := typx.FieldByName(t.t, name)
 	if f != nil {
 		return &TStructField{ctx: t.ctx, v: f.Var(), tag: f.Tag()}, true
 	}
@@ -215,7 +200,7 @@ func (t *ttype) FieldByName(name string) (StructField, bool) {
 }
 
 func (t *ttype) FieldByNameFunc(match func(string) bool) (StructField, bool) {
-	f := inspectx.FieldByNameFunc(t.t, match)
+	f := typx.FieldByNameFunc(t.t, match)
 	if f != nil {
 		return &TStructField{ctx: t.ctx, v: f.Var(), tag: f.Tag()}, true
 	}
@@ -247,7 +232,7 @@ func (t *ttype) IsVariadic() bool {
 	case *types.Signature:
 		return x.Variadic()
 	case *types.Named:
-		return NewTType(t.ctx, x.Underlying()).IsVariadic()
+		return NewTType(x.Underlying()).IsVariadic()
 	default:
 		return false
 	}
@@ -258,7 +243,7 @@ func (t *ttype) NumIn() int {
 	case *types.Signature:
 		return x.Params().Len()
 	case *types.Named:
-		return NewTType(t.ctx, x.Underlying()).NumIn()
+		return NewTType(x.Underlying()).NumIn()
 	default:
 		return 0
 	}
@@ -268,11 +253,11 @@ func (t *ttype) In(i int) Type {
 	switch x := t.t.(type) {
 	case *types.Signature:
 		if i >= 0 && i < x.Params().Len() {
-			return NewTType(t.ctx, x.Params().At(i).Type())
+			return NewTType(x.Params().At(i).Type())
 		}
 		return nil
 	case *types.Named:
-		return NewTType(t.ctx, x.Underlying()).In(i)
+		return NewTType(x.Underlying()).In(i)
 	default:
 		return nil
 	}
@@ -283,7 +268,7 @@ func (t *ttype) NumOut() int {
 	case *types.Signature:
 		return x.Results().Len()
 	case *types.Named:
-		return NewTType(t.ctx, x.Underlying()).NumOut()
+		return NewTType(x.Underlying()).NumOut()
 	default:
 		return 0
 	}
@@ -293,11 +278,11 @@ func (t *ttype) Out(i int) Type {
 	switch x := t.t.(type) {
 	case *types.Signature:
 		if i >= 0 && i < x.Results().Len() {
-			return NewTType(t.ctx, x.Results().At(i).Type())
+			return NewTType(x.Results().At(i).Type())
 		}
 		return nil
 	case *types.Named:
-		return NewTType(t.ctx, x.Underlying()).Out(i)
+		return NewTType(x.Underlying()).Out(i)
 	default:
 		return nil
 	}
@@ -325,7 +310,7 @@ func (f *TStructField) Name() string {
 }
 
 func (f *TStructField) Type() Type {
-	return NewTType(f.ctx, f.v.Type())
+	return NewTType(f.v.Type())
 }
 
 func (f *TStructField) Tag() reflect.StructTag {
@@ -360,10 +345,12 @@ func (m *TMethod) Type() Type {
 	for i := range s.Params().Len() {
 		params = append(params, s.Params().At(i))
 	}
-	return NewTType(m.ctx, types.NewSignatureType(
-		nil, nil, nil,
-		types.NewTuple(params...),
-		s.Results(),
-		s.Variadic(),
-	))
+	return NewTType(
+		types.NewSignatureType(
+			nil, nil, nil,
+			types.NewTuple(params...),
+			s.Results(),
+			s.Variadic(),
+		),
+	)
 }

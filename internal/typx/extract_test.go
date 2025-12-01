@@ -1,4 +1,4 @@
-package parsex_test
+package typx_test
 
 import (
 	"fmt"
@@ -6,13 +6,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/xoctopus/x/resultx"
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal/parsex"
+	"github.com/xoctopus/typex/internal/typx"
 )
 
-var cases = []struct {
+var ExtractCases = []struct {
 	id      string
 	bracket rune
 	sep     rune
@@ -56,9 +55,9 @@ var cases = []struct {
 }
 
 func TestBracketedAndSeparate(t *testing.T) {
-	for _, c := range cases {
-		sub, l, r := parsex.Bracketed(c.id, c.bracket)
-		parts := parsex.Separate(sub, c.sep)
+	for _, c := range ExtractCases {
+		sub, l, r := typx.Bracketed(c.id, c.bracket)
+		parts := typx.Separate(sub, c.sep)
 		Expect(t, parts, Equal(c.parts))
 		if sub != "" {
 			Expect(t, c.id[l+1:r], Equal(sub))
@@ -78,18 +77,18 @@ func Example_structInTypeArguments() {
 	}]]()
 	fmt.Println(t1.String())
 
-	targs0 := resultx.ResultsOf(parsex.Bracketed(t1.String(), '[')).At(0).(string)
-	fields := resultx.ResultsOf(parsex.Bracketed(targs0, '{')).At(0).(string)
+	targs0, _, _ := typx.Bracketed(t1.String(), '[')
+	fields, _, _ := typx.Bracketed(targs0, '{')
 
-	for i, f := range parsex.Separate(fields, ';') {
-		name, typ, tag := parsex.FieldInfo(f)
+	for i, f := range typx.Separate(fields, ';') {
+		name, typ, tag := typx.FieldInfo(f)
 		fmt.Printf("field%d: name=%s;type=%s;tag=%s\n", i, name, typ, tag)
 	}
 
 	// Output:
-	// parsex_test.TT[struct { github.com/xoctopus/typex/internal/parsex_test.string = string; TT = github.com/xoctopus/typex/internal/parsex_test.TT[int] "json:\"x\"" }]
+	// typx_test.TT[struct { github.com/xoctopus/typex/internal/typx_test.string = string; TT = github.com/xoctopus/typex/internal/typx_test.TT[int] "json:\"x\"" }]
 	// field0: name=;type=string;tag=
-	// field1: name=;type=github.com/xoctopus/typex/internal/parsex_test.TT[int];tag=json:"x"
+	// field1: name=;type=github.com/xoctopus/typex/internal/typx_test.TT[int];tag=json:"x"
 }
 
 func TestFieldInfo(t *testing.T) {
@@ -104,23 +103,21 @@ func TestFieldInfo(t *testing.T) {
 			AA      struct{ B int }
 		}]{})
 
-		fields := resultx.ResultsOf(parsex.Bracketed(
-			resultx.ResultsOf(parsex.Bracketed(tt.String(), '[')).At(0).(string),
-			'{',
-		)).At(0).(string)
+		targs, _, _ := typx.Bracketed(tt.String(), '[')
+		fields, _, _ := typx.Bracketed(targs, '{')
 
 		expects := [][3]string{
 			{"", "string", ""},
 			{"A", "int", `json:"a,\"'{}()[]//\\"`},
-			{"", "github.com/xoctopus/typex/internal/parsex_test.TT[int]", `json:"tt"`},
-			{"TT2", "github.com/xoctopus/typex/internal/parsex_test.TT[struct { A int }]", ""},
+			{"", "github.com/xoctopus/typex/internal/typx_test.TT[int]", `json:"tt"`},
+			{"TT2", "github.com/xoctopus/typex/internal/typx_test.TT[struct { A int }]", ""},
 			{"Reader", "io.Reader", ""},
 			{"a", "struct { A string }", ""},
 			{"AA", "struct { B int }", ""},
 		}
 
-		for i, f := range parsex.Separate(fields, ';') {
-			name, typ, tag := parsex.FieldInfo(f)
+		for i, f := range typx.Separate(fields, ';') {
+			name, typ, tag := typx.FieldInfo(f)
 			Expect(t, name, Equal(expects[i][0]))
 			Expect(t, typ, Equal(expects[i][1]))
 			Expect(t, tag, Equal(expects[i][2]))
@@ -136,21 +133,20 @@ func TestFieldInfo(t *testing.T) {
 			a       struct{ A string }
 			AA      struct{ B int }
 		}{})
-
-		fields := resultx.ResultsOf(parsex.Bracketed(tt.String(), '{')).At(0).(string)
+		fields, _, _ := typx.Bracketed(tt.String(), '{')
 
 		expects := [][3]string{
 			{"", "string", ""},
 			{"A", "int", `json:"a,\"'{}()[]//\\"`},
-			{"", "parsex_test.TT[int]", `json:"tt"`},
-			{"TT2", "parsex_test.TT[struct { A int }]", ""},
+			{"", "typx_test.TT[int]", `json:"tt"`},
+			{"TT2", "typx_test.TT[struct { A int }]", ""},
 			{"Reader", "io.Reader", ""},
 			{"a", "struct { A string }", ""},
 			{"AA", "struct { B int }", ""},
 		}
 
-		for i, f := range parsex.Separate(fields, ';') {
-			name, typ, tag := parsex.FieldInfo(f)
+		for i, f := range typx.Separate(fields, ';') {
+			name, typ, tag := typx.FieldInfo(f)
 			Expect(t, name, Equal(expects[i][0]))
 			Expect(t, typ, Equal(expects[i][1]))
 			Expect(t, tag, Equal(expects[i][2]))

@@ -1,4 +1,4 @@
-package inspectx_test
+package typx_test
 
 import (
 	"fmt"
@@ -9,15 +9,12 @@ import (
 	"github.com/xoctopus/x/ptrx"
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal"
-	"github.com/xoctopus/typex/internal/inspectx"
+	"github.com/xoctopus/typex/internal/typx"
 	"github.com/xoctopus/typex/testdata"
 )
 
-var rtyp = reflect.TypeFor[testdata.Structures]()
-
 func runner(t *testing.T, rt reflect.Type, tt types.Type) {
-	methods := inspectx.InspectMethods(tt)
+	methods := typx.InspectMethods(tt)
 	Expect(t, rt.NumMethod(), Equal(len(methods)))
 
 	for mi, m := range methods {
@@ -26,10 +23,11 @@ func runner(t *testing.T, rt reflect.Type, tt types.Type) {
 }
 
 func TestInspectMethods(t *testing.T) {
+	rtyp := reflect.TypeFor[testdata.Structures]()
 	for i := range rtyp.NumField() {
 		f := rtyp.Field(i)
 		rt := f.Type
-		tt := internal.Global().TType(testdata.Context, rt)
+		tt := typx.NewLitType(rt).Type()
 		name := f.Name
 
 		for range 2 {
@@ -43,14 +41,15 @@ func TestInspectMethods(t *testing.T) {
 	}
 
 	t.Run("MultiLevelPointer", func(t *testing.T) {
-		tt := internal.Global().TType(testdata.Context, reflect.TypeFor[**testdata.UnambiguousL1AndL2x2]())
-		Expect(t, len(inspectx.InspectMethods(tt)), Equal(0))
-		tt = internal.Global().TType(testdata.Context, reflect.TypeFor[*error]())
-		Expect(t, len(inspectx.InspectMethods(tt)), Equal(0))
+		tt := typx.NewLitType(reflect.TypeFor[**testdata.UnambiguousL1AndL2x2]()).Type()
+		Expect(t, len(typx.InspectMethods(tt)), Equal(0))
+		tt = typx.NewLitType(reflect.TypeFor[*error]()).Type()
+		Expect(t, len(typx.InspectMethods(tt)), Equal(0))
 	})
 }
 
 func TestInspectField(t *testing.T) {
+	rtyp := reflect.TypeFor[testdata.Structures]()
 	for i := range rtyp.NumField() {
 		fi := rtyp.Field(i)
 		rti := fi.Type
@@ -60,23 +59,23 @@ func TestInspectField(t *testing.T) {
 		t.Run(fi.Name, func(t *testing.T) {
 			for j := range rti.NumField() {
 				fj := rti.Field(j)
-				tt := internal.Global().TType(testdata.Context, rti)
+				tt := typx.NewLitType(rti).Type()
 
-				tf := inspectx.FieldByName(tt, fj.Name)
+				tf := typx.FieldByName(tt, fj.Name)
 				Expect(t, tf.Var().Name(), Equal(fj.Name))
 				Expect(t, tf.Tag(), Equal(string(fj.Tag)))
 
-				tf = inspectx.FieldByNameFunc(tt, func(s string) bool { return true })
+				tf = typx.FieldByNameFunc(tt, func(s string) bool { return true })
 				if rti.NumField() > 1 {
-					Expect(t, tf, BeNil[*inspectx.Field]())
+					Expect(t, tf, BeNil[*typx.Field]())
 				}
 
-				tf = inspectx.FieldByNameFunc(tt, func(v string) bool { return v == fj.Name })
+				tf = typx.FieldByNameFunc(tt, func(v string) bool { return v == fj.Name })
 				Expect(t, tf.Var().Name(), Equal(fj.Name))
 				Expect(t, tf.Tag(), Equal(string(fj.Tag)))
 
-				tf = inspectx.FieldByName(types.NewPointer(tt), "any")
-				Expect(t, tf, BeNil[*inspectx.Field]())
+				tf = typx.FieldByName(types.NewPointer(tt), "any")
+				Expect(t, tf, BeNil[*typx.Field]())
 			}
 		})
 	}

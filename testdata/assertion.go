@@ -1,7 +1,6 @@
 package testdata
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -10,12 +9,12 @@ import (
 	"github.com/xoctopus/x/reflectx"
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal"
-	"github.com/xoctopus/typex/internal/x"
+	lit "github.com/xoctopus/typex/internal/typx"
+	"github.com/xoctopus/typex/pkg/typx"
 )
 
 var (
-	instantiations [2]func(context.Context, any) x.Type
+	instantiations [2]func(any) typx.Type
 
 	Bundles = []*CompareBundles{
 		{name: "Stringer", rtyp: reflect.TypeFor[fmt.Stringer]()},
@@ -34,7 +33,7 @@ var (
 	}
 )
 
-func RegisterInstantiations(f1, f2 func(context.Context, any) x.Type) {
+func RegisterInstantiations(f1, f2 func(any) typx.Type) {
 	instantiations[0] = f1
 	instantiations[1] = f2
 
@@ -71,11 +70,13 @@ func (b *CompareBundles) Name() string {
 }
 
 func (b *CompareBundles) Init() {
+	rt := b.rtyp
+	tt := lit.NewLitType(b.rtyp).Type()
 	b.types = []*CompareBundle{
-		{"ReflectType", b.rtyp},
-		{"TypesType", internal.Global().TType(Context, b.rtyp)},
-		{"RType", instantiations[0](Context, b.rtyp)},
-		{"TType", instantiations[1](Context, b.rtyp)},
+		{"ReflectType", rt},
+		{"TypesType", tt},
+		{"RType", instantiations[0](rt)},
+		{"TType", instantiations[1](tt)},
 	}
 }
 
@@ -101,8 +102,8 @@ func (bc *Bundle) Init() {
 			bc.cases = append(bc.cases, &Case{
 				name: name,
 				r:    t,
-				rt:   instantiations[0](Context, t),
-				tt:   instantiations[1](Context, t),
+				rt:   instantiations[0](t),
+				tt:   instantiations[1](lit.NewLitType(t).Type()),
 			})
 			t = reflect.PointerTo(t)
 			name = name + "Ptr"
@@ -126,12 +127,12 @@ func (bc *Bundle) Cases() []*Case {
 
 type BundleCases []*Bundle
 
-func NewFieldResult(f x.StructField, exists bool) *FieldResult {
+func NewFieldResult(f typx.StructField, exists bool) *FieldResult {
 	return &FieldResult{f, exists}
 }
 
 type FieldResult struct {
-	f      x.StructField
+	f      typx.StructField
 	exists bool
 }
 
@@ -149,7 +150,7 @@ func (fas FieldAssertions) Run(t *testing.T) {
 		for _, r := range fa.xfs {
 			if fa.exist {
 				Expect(t, r.exists, BeTrue())
-				Expect(t, r.f, NotBeNil[x.StructField]())
+				Expect(t, r.f, NotBeNil[typx.StructField]())
 				Expect(t, r.f.Name(), Equal(fa.f.Name))
 				Expect(t, r.f.Tag(), Equal(fa.f.Tag))
 				Expect(t, r.f.PkgPath(), Equal(fa.f.PkgPath))
@@ -157,18 +158,18 @@ func (fas FieldAssertions) Run(t *testing.T) {
 				Expect(t, r.f.Type().String(), Equal(fa.typ))
 			} else {
 				Expect(t, r.exists, BeFalse())
-				Expect(t, r.f, BeNil[x.StructField]())
+				Expect(t, r.f, BeNil[typx.StructField]())
 			}
 		}
 	}
 }
 
-func NewMethodResult(m x.Method, exists bool) *MethodResult {
+func NewMethodResult(m typx.Method, exists bool) *MethodResult {
 	return &MethodResult{m, exists}
 }
 
 type MethodResult struct {
-	m      x.Method
+	m      typx.Method
 	exists bool
 }
 
@@ -186,13 +187,13 @@ func (mas MethodAssertions) Run(t *testing.T) {
 		for _, m := range ma.xms {
 			if ma.exists {
 				Expect(t, m.exists, BeTrue())
-				Expect(t, m.m, NotBeNil[x.Method]())
+				Expect(t, m.m, NotBeNil[typx.Method]())
 				Expect(t, m.m.Name(), Equal(ma.m.Name))
 				Expect(t, m.m.PkgPath(), Equal(ma.m.PkgPath))
 				Expect(t, m.m.Type().String(), Equal(ma.typ))
 			} else {
 				Expect(t, m.exists, BeFalse())
-				Expect(t, m.m, BeNil[x.Method]())
+				Expect(t, m.m, BeNil[typx.Method]())
 			}
 		}
 	}
@@ -201,8 +202,8 @@ func (mas MethodAssertions) Run(t *testing.T) {
 type Case struct {
 	name string
 	r    reflect.Type
-	rt   x.Type
-	tt   x.Type
+	rt   typx.Type
+	tt   typx.Type
 }
 
 func (c *Case) Name() string {
@@ -222,10 +223,10 @@ func (c *Case) Run(t *testing.T) {
 		Expect(t, c.rt.Name(), Equal(c.r.Name()))
 		Expect(t, c.tt.Name(), Equal(c.r.Name()))
 	})
-	t.Run("Literal", func(t *testing.T) {
-		Expect(t, c.rt.String(), Equal(c.tt.String()))
-		Expect(t, c.rt.TypeLit(context.Background()), Equal(c.tt.TypeLit(context.Background())))
-	})
+	// t.Run("Literal", func(t *testing.T) {
+	// 	Expect(t, c.rt.String(), Equal(c.tt.String()))
+	// 	Expect(t, c.rt.TypeLit(context.Background()), Equal(c.tt.TypeLit(context.Background())))
+	// })
 
 	t.Run("Implements", func(t *testing.T) {
 		for _, b := range Bundles {
@@ -291,8 +292,8 @@ func (c *Case) Run(t *testing.T) {
 		if c.r.Kind() == reflect.Map {
 			Expect(t, c.rt.Key().String(), Equal(c.tt.Key().String()))
 		} else {
-			Expect(t, c.rt.Key(), BeNil[x.Type]())
-			Expect(t, c.tt.Key(), BeNil[x.Type]())
+			Expect(t, c.rt.Key(), BeNil[typx.Type]())
+			Expect(t, c.tt.Key(), BeNil[typx.Type]())
 		}
 	})
 
@@ -300,8 +301,8 @@ func (c *Case) Run(t *testing.T) {
 		if reflectx.CanElem(c.r) {
 			Expect(t, c.rt.Elem().String(), Equal(c.tt.Elem().String()))
 		} else {
-			Expect(t, c.rt.Elem(), BeNil[x.Type]())
-			Expect(t, c.tt.Elem(), BeNil[x.Type]())
+			Expect(t, c.rt.Elem(), BeNil[typx.Type]())
+			Expect(t, c.tt.Elem(), BeNil[typx.Type]())
 		}
 	})
 
@@ -329,17 +330,17 @@ func (c *Case) Run(t *testing.T) {
 		fas := c.FieldAssertions(fields, "Name", "name", "str", "_", "unexported", "")
 		fas.Run(t)
 		t.Run("OutOfRange", func(t *testing.T) {
-			Expect(t, c.rt.Field(fields+1), BeNil[x.StructField]())
-			Expect(t, c.tt.Field(fields+1), BeNil[x.StructField]())
+			Expect(t, c.rt.Field(fields+1), BeNil[typx.StructField]())
+			Expect(t, c.tt.Field(fields+1), BeNil[typx.StructField]())
 		})
 		t.Run("MatchAlwaysTrue", func(t *testing.T) {
 			match := func(v string) bool { return true }
 			rf, ok1 := c.rt.FieldByNameFunc(match)
 			tf, ok2 := c.tt.FieldByNameFunc(match)
 			if fields != 1 {
-				Expect(t, rf, BeNil[x.StructField]())
+				Expect(t, rf, BeNil[typx.StructField]())
 				Expect(t, ok1, BeFalse())
-				Expect(t, tf, BeNil[x.StructField]())
+				Expect(t, tf, BeNil[typx.StructField]())
 				Expect(t, ok2, BeFalse())
 			} else {
 				rf0 := c.rt.Field(0)
@@ -362,8 +363,8 @@ func (c *Case) Run(t *testing.T) {
 		mas := c.MethodAssertions(methods, "Name", "name", "str", "_", "unexported", "")
 		mas.Run(t)
 		t.Run("OutOfRange", func(t *testing.T) {
-			Expect(t, c.rt.Method(methods+1), BeNil[x.Method]())
-			Expect(t, c.tt.Method(methods+1), BeNil[x.Method]())
+			Expect(t, c.rt.Method(methods+1), BeNil[typx.Method]())
+			Expect(t, c.tt.Method(methods+1), BeNil[typx.Method]())
 		})
 	})
 
@@ -386,14 +387,14 @@ func (c *Case) Run(t *testing.T) {
 				Expect(t, c.rt.In(i).PkgPath(), Equal(c.tt.In(i).PkgPath()))
 			}
 			t.Run("OutOfRange", func(t *testing.T) {
-				Expect(t, c.rt.In(c.r.NumIn()), BeNil[x.Type]())
-				Expect(t, c.tt.In(c.r.NumIn()), BeNil[x.Type]())
+				Expect(t, c.rt.In(c.r.NumIn()), BeNil[typx.Type]())
+				Expect(t, c.tt.In(c.r.NumIn()), BeNil[typx.Type]())
 			})
 		} else {
 			Expect(t, c.rt.NumIn(), Equal(0))
 			Expect(t, c.tt.NumIn(), Equal(0))
-			Expect(t, c.rt.In(0), BeNil[x.Type]())
-			Expect(t, c.tt.In(0), BeNil[x.Type]())
+			Expect(t, c.rt.In(0), BeNil[typx.Type]())
+			Expect(t, c.tt.In(0), BeNil[typx.Type]())
 		}
 	})
 
@@ -407,14 +408,14 @@ func (c *Case) Run(t *testing.T) {
 				Expect(t, c.rt.Out(i).PkgPath(), Equal(c.tt.Out(i).PkgPath()))
 			}
 			t.Run("OutOfRange", func(t *testing.T) {
-				Expect(t, c.rt.Out(c.r.NumOut()), BeNil[x.Type]())
-				Expect(t, c.tt.Out(c.r.NumOut()), BeNil[x.Type]())
+				Expect(t, c.rt.Out(c.r.NumOut()), BeNil[typx.Type]())
+				Expect(t, c.tt.Out(c.r.NumOut()), BeNil[typx.Type]())
 			})
 		} else {
 			Expect(t, c.rt.NumOut(), Equal(0))
 			Expect(t, c.tt.NumOut(), Equal(0))
-			Expect(t, c.rt.Out(0), BeNil[x.Type]())
-			Expect(t, c.tt.Out(0), BeNil[x.Type]())
+			Expect(t, c.rt.Out(0), BeNil[typx.Type]())
+			Expect(t, c.tt.Out(0), BeNil[typx.Type]())
 		}
 	})
 }

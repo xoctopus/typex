@@ -1,7 +1,6 @@
-package x
+package typx
 
 import (
-	"context"
 	"reflect"
 )
 
@@ -14,7 +13,7 @@ type Type interface {
 	PkgPath() string
 	Name() string
 	String() string
-	TypeLit(context.Context) string
+	// TypeLit(context.Context) string
 
 	Implements(any) bool
 	AssignableTo(any) bool
