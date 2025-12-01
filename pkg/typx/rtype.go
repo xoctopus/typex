@@ -8,7 +8,7 @@ import (
 	"github.com/xoctopus/x/misc/must"
 	"github.com/xoctopus/x/reflectx"
 
-	"github.com/xoctopus/typex/internal/typx"
+	"github.com/xoctopus/typx/internal/typx"
 )
 
 func NewRType(t reflect.Type) Type {

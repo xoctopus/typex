@@ -1,4 +1,4 @@
-module github.com/xoctopus/typex
+module github.com/xoctopus/typx
 
 go 1.25.4
 

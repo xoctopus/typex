@@ -12,8 +12,8 @@ import (
 
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal/typx"
-	"github.com/xoctopus/typex/testdata"
+	"github.com/xoctopus/typx/internal/typx"
+	"github.com/xoctopus/typx/testdata"
 )
 
 // packages
@@ -24,7 +24,7 @@ var (
 	stdIter    = typx.Load("iter")
 	stdIO      = typx.Load("io")
 	stdStrconv = typx.Load("strconv")
-	testPkg    = typx.Load("github.com/xoctopus/typex/testdata")
+	testPkg    = typx.Load("github.com/xoctopus/typx/testdata")
 )
 
 // generic type
@@ -189,10 +189,10 @@ var (
 	wUnnamedStruct = `struct { ` +
 		`A string; ` +
 		`B int; ` +
-		`github_com_xoctopus_typex_testdata.Map "json:\"esc''{}[]\\\"\""; ` +
-		`github_com_xoctopus_typex_testdata.TypedArray[net.Addr]; ` +
+		`github_com_xoctopus_typx_testdata.Map "json:\"esc''{}[]\\\"\""; ` +
+		`github_com_xoctopus_typx_testdata.TypedArray[net.Addr]; ` +
 		`C struct { ` +
-		`github_com_xoctopus_typex_testdata.TypedArray[struct { github_com_xoctopus_typex_testdata.TypedArray[fmt.Stringer] }] ` +
+		`github_com_xoctopus_typx_testdata.TypedArray[struct { github_com_xoctopus_typx_testdata.TypedArray[fmt.Stringer] }] ` +
 		`}; ` +
 		`D interface { ` +
 		`Close() error; ` +
@@ -204,10 +204,10 @@ var (
 	oUnnamedStruct = `struct { ` +
 		`A string; ` +
 		`B int; ` +
-		`github.com/xoctopus/typex/testdata.Map "json:\"esc''{}[]\\\"\""; ` +
-		`github.com/xoctopus/typex/testdata.TypedArray[net.Addr]; ` +
+		`github.com/xoctopus/typx/testdata.Map "json:\"esc''{}[]\\\"\""; ` +
+		`github.com/xoctopus/typx/testdata.TypedArray[net.Addr]; ` +
 		`C struct { ` +
-		`github.com/xoctopus/typex/testdata.TypedArray[struct { github.com/xoctopus/typex/testdata.TypedArray[fmt.Stringer] }] ` +
+		`github.com/xoctopus/typx/testdata.TypedArray[struct { github.com/xoctopus/typx/testdata.TypedArray[fmt.Stringer] }] ` +
 		`}; ` +
 		`D interface { ` +
 		`Close() error; ` +
@@ -256,8 +256,8 @@ var (
 		}
 	}]]()
 	tTypedArrayUnnamedStruct = typx.Instantiate(_tTypedArray, tUnnamedStruct)
-	wTypedArrayUnnamedStruct = `github_com_xoctopus_typex_testdata.TypedArray[` + wUnnamedStruct + `]`
-	oTypedArrayUnnamedStruct = `github.com/xoctopus/typex/testdata.TypedArray[` + oUnnamedStruct + `]`
+	wTypedArrayUnnamedStruct = `github_com_xoctopus_typx_testdata.TypedArray[` + wUnnamedStruct + `]`
+	oTypedArrayUnnamedStruct = `github.com/xoctopus/typx/testdata.TypedArray[` + oUnnamedStruct + `]`
 
 	rTypedArrayEmptyInterface = reflect.TypeFor[testdata.TypedArray[interface{}]]()
 	tTypedArrayEmptyInterface = typx.Instantiate(_tTypedArray, tEmptyInterface)
@@ -419,9 +419,9 @@ var LitTypeCases = []struct {
 		name:    "TestdataTagged",
 		rt:      rTagged,
 		tt:      tTagged,
-		expect:  "github_com_xoctopus_typex_testdata.Tagged",
-		origin:  "github.com/xoctopus/typex/testdata.Tagged",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.Tagged",
+		origin:  "github.com/xoctopus/typx/testdata.Tagged",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "Tagged",
 	},
 	{
@@ -509,8 +509,8 @@ var LitTypeCases = []struct {
 		name:    "SendChanTestdataTagged",
 		rt:      rSendChanTestdataTagged,
 		tt:      tSendChanTestdataTagged,
-		expect:  "chan<- github_com_xoctopus_typex_testdata.Tagged",
-		origin:  "chan<- github.com/xoctopus/typex/testdata.Tagged",
+		expect:  "chan<- github_com_xoctopus_typx_testdata.Tagged",
+		origin:  "chan<- github.com/xoctopus/typx/testdata.Tagged",
 		PkgPath: "",
 		Name:    "",
 	},
@@ -518,8 +518,8 @@ var LitTypeCases = []struct {
 		name:    "RecvChanTestdataTagged",
 		rt:      rRecvChanTestdataTaggedPointer,
 		tt:      tRecvChanTestdataTaggedPointer,
-		expect:  "<-chan *github_com_xoctopus_typex_testdata.Tagged",
-		origin:  "<-chan *github.com/xoctopus/typex/testdata.Tagged",
+		expect:  "<-chan *github_com_xoctopus_typx_testdata.Tagged",
+		origin:  "<-chan *github.com/xoctopus/typx/testdata.Tagged",
 		PkgPath: "",
 		Name:    "",
 	},
@@ -536,18 +536,18 @@ var LitTypeCases = []struct {
 		name:    "TestdataTypedSliceAliasNetAddr",
 		rt:      rTypedSliceAliasNetAddr,
 		tt:      tTypedSliceAliasNetAddr,
-		expect:  "github_com_xoctopus_typex_testdata.TypedSlice[net.Addr]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedSlice[net.Addr]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedSlice[net.Addr]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedSlice[net.Addr]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedSlice[net.Addr]",
 	},
 	{
 		name:    "TestdataMap",
 		rt:      rMap,
 		tt:      tMap,
-		expect:  "github_com_xoctopus_typex_testdata.Map",
-		origin:  "github.com/xoctopus/typex/testdata.Map",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.Map",
+		origin:  "github.com/xoctopus/typx/testdata.Map",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "Map",
 	},
 	{
@@ -563,72 +563,72 @@ var LitTypeCases = []struct {
 		name:    "TypedArrayFmtString",
 		rt:      rTypedArrayFmtString,
 		tt:      tTypedArrayFmtString,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[fmt.Stringer]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[fmt.Stringer]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[fmt.Stringer]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[fmt.Stringer]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[fmt.Stringer]",
 	},
 	{
 		name:    "TypedArrayStringSlice",
 		rt:      rTypedArrayStringSlice,
 		tt:      tTypedArrayStringSlice,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[[]string]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[[]string]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[[]string]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[[]string]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[[]string]",
 	},
 	{
 		name:    "TypedArrayStringArray",
 		rt:      rTypedArrayStringArray,
 		tt:      tTypedArrayStringArray,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[[2]string]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[[2]string]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[[2]string]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[[2]string]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[[2]string]",
 	},
 	{
 		name:    "TypedArrayMapIntString",
 		rt:      rTypedArrayMapIntString,
 		tt:      tTypedArrayMapIntString,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[map[int]string]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[map[int]string]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[map[int]string]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[map[int]string]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[map[int]string]",
 	},
 	{
 		name:    "TypedArrayChanError",
 		rt:      rTypedArrayChanError,
 		tt:      tTypedArrayChanError,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[chan error]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[chan error]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[chan error]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[chan error]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[chan error]",
 	},
 	{
 		name:    "TypedArrayChanTagged",
 		rt:      rTypedArrayChanTagged,
 		tt:      tTypedArrayChanTagged,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[chan<- github_com_xoctopus_typex_testdata.Tagged]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[chan<- github.com/xoctopus/typex/testdata.Tagged]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
-		Name:    "TypedArray[chan<- github.com/xoctopus/typex/testdata.Tagged]",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[chan<- github_com_xoctopus_typx_testdata.Tagged]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[chan<- github.com/xoctopus/typx/testdata.Tagged]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
+		Name:    "TypedArray[chan<- github.com/xoctopus/typx/testdata.Tagged]",
 	},
 	{
 		name:    "TypedArrayChanTaggedPointer",
 		rt:      rTypedArrayChanTaggedPointer,
 		tt:      tTypedArrayChanTaggedPointer,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[<-chan *github_com_xoctopus_typex_testdata.Tagged]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[<-chan *github.com/xoctopus/typex/testdata.Tagged]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
-		Name:    "TypedArray[<-chan *github.com/xoctopus/typex/testdata.Tagged]",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[<-chan *github_com_xoctopus_typx_testdata.Tagged]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[<-chan *github.com/xoctopus/typx/testdata.Tagged]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
+		Name:    "TypedArray[<-chan *github.com/xoctopus/typx/testdata.Tagged]",
 	},
 	{
 		name:    "TypedArrayEmptyStruct",
 		rt:      rTypedArrayEmptyStruct,
 		tt:      tTypedArrayEmptyStruct,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[struct {}]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[struct {}]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[struct {}]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[struct {}]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[struct {}]",
 	},
 	{
@@ -637,52 +637,52 @@ var LitTypeCases = []struct {
 		tt:      tTypedArrayUnnamedStruct,
 		expect:  wTypedArrayUnnamedStruct,
 		origin:  oTypedArrayUnnamedStruct,
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[" + oUnnamedStruct + "]",
 	},
 	{
 		name:    "TypedArrayEmptyInterface",
 		rt:      rTypedArrayEmptyInterface,
 		tt:      tTypedArrayEmptyInterface,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[interface {}]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[interface {}]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[interface {}]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[interface {}]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[interface {}]",
 	},
 	{
 		name:    "TypedArrayUnnamedInterface",
 		rt:      rTypedArrayUnnamedInterface,
 		tt:      tTypedArrayUnnamedInterface,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[" + wUnnamedInterfaceComposer + "]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[" + oUnnamedInterfaceComposer + "]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[" + wUnnamedInterfaceComposer + "]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[" + oUnnamedInterfaceComposer + "]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[" + oUnnamedInterfaceComposer + "]",
 	},
 	{
 		name:    "TypedArrayFunc",
 		rt:      rTypedArrayFunc,
 		tt:      tTypedArrayFunc,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[func()]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[func()]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[func()]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[func()]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[func()]",
 	},
 	{
 		name:    "TypedArrayFuncVariadic",
 		rt:      rTypedArrayFuncVariadic,
 		tt:      tTypedArrayFuncVariadic,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[func(fmt.Stringer, ...interface {})]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[func(fmt.Stringer, ...interface {})]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[func(fmt.Stringer, ...interface {})]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[func(fmt.Stringer, ...interface {})]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[func(fmt.Stringer, ...interface {})]",
 	},
 	{
 		name:    "TypedArrayFuncWithMultiReturn",
 		rt:      rTypedArrayFuncWithMultiReturn,
 		tt:      tTypedArrayFuncWithMultiReturn,
-		expect:  "github_com_xoctopus_typex_testdata.TypedArray[func(int, ...interface {}) (bool, error)]",
-		origin:  "github.com/xoctopus/typex/testdata.TypedArray[func(int, ...interface {}) (bool, error)]",
-		PkgPath: "github.com/xoctopus/typex/testdata",
+		expect:  "github_com_xoctopus_typx_testdata.TypedArray[func(int, ...interface {}) (bool, error)]",
+		origin:  "github.com/xoctopus/typx/testdata.TypedArray[func(int, ...interface {}) (bool, error)]",
+		PkgPath: "github.com/xoctopus/typx/testdata",
 		Name:    "TypedArray[func(int, ...interface {}) (bool, error)]",
 	},
 }

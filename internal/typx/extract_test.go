@@ -8,7 +8,7 @@ import (
 
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal/typx"
+	"github.com/xoctopus/typx/internal/typx"
 )
 
 var ExtractCases = []struct {
@@ -86,9 +86,9 @@ func Example_structInTypeArguments() {
 	}
 
 	// Output:
-	// typx_test.TT[struct { github.com/xoctopus/typex/internal/typx_test.string = string; TT = github.com/xoctopus/typex/internal/typx_test.TT[int] "json:\"x\"" }]
+	// typx_test.TT[struct { github.com/xoctopus/typx/internal/typx_test.string = string; TT = github.com/xoctopus/typx/internal/typx_test.TT[int] "json:\"x\"" }]
 	// field0: name=;type=string;tag=
-	// field1: name=;type=github.com/xoctopus/typex/internal/typx_test.TT[int];tag=json:"x"
+	// field1: name=;type=github.com/xoctopus/typx/internal/typx_test.TT[int];tag=json:"x"
 }
 
 func TestFieldInfo(t *testing.T) {
@@ -109,8 +109,8 @@ func TestFieldInfo(t *testing.T) {
 		expects := [][3]string{
 			{"", "string", ""},
 			{"A", "int", `json:"a,\"'{}()[]//\\"`},
-			{"", "github.com/xoctopus/typex/internal/typx_test.TT[int]", `json:"tt"`},
-			{"TT2", "github.com/xoctopus/typex/internal/typx_test.TT[struct { A int }]", ""},
+			{"", "github.com/xoctopus/typx/internal/typx_test.TT[int]", `json:"tt"`},
+			{"TT2", "github.com/xoctopus/typx/internal/typx_test.TT[struct { A int }]", ""},
 			{"Reader", "io.Reader", ""},
 			{"a", "struct { A string }", ""},
 			{"AA", "struct { B int }", ""},

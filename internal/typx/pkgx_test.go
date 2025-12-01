@@ -5,14 +5,14 @@ import (
 
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal/typx"
+	"github.com/xoctopus/typx/internal/typx"
 )
 
 func TestPackageLoad(t *testing.T) {
-	pkg := typx.Load("github.com/xoctopus/typex/pkg/typx_test")
-	Expect(t, pkg.Path(), Equal("github.com/xoctopus/typex/pkg/typx_test"))
+	pkg := typx.Load("github.com/xoctopus/typx/pkg/typx_test")
+	Expect(t, pkg.Path(), Equal("github.com/xoctopus/typx/pkg/typx_test"))
 
 	ExpectPanic[error](t, func() {
-		pkg = typx.Load("github.com/xoctopus/typex/pkg/typex")
+		pkg = typx.Load("github.com/xoctopus/typx/pkg/typex")
 	})
 }

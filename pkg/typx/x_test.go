@@ -9,13 +9,13 @@ import (
 	"github.com/xoctopus/x/misc/must"
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/pkg/typx"
-	"github.com/xoctopus/typex/testdata"
+	"github.com/xoctopus/typx/pkg/typx"
+	"github.com/xoctopus/typx/testdata"
 )
 
 var (
 	ctx  = testdata.Context
-	path = "github.com/xoctopus/typex/testdata"
+	path = "github.com/xoctopus/typx/testdata"
 )
 
 func init() {

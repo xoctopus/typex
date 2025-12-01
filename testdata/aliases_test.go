@@ -14,15 +14,15 @@ func Example_aliases() {
 		"AliasSerialized",
 		"AliasWithTArg",
 	} {
-		x := pkgx.MustLookup[*types.Alias](Context, "github.com/xoctopus/typex/testdata", name)
+		x := pkgx.MustLookup[*types.Alias](Context, "github.com/xoctopus/typx/testdata", name)
 		fmt.Println(x)
 
 		// x.
 	}
 
 	// Output:
-	// github.com/xoctopus/typex/testdata.AliasInt
-	// github.com/xoctopus/typex/testdata.AliasUnion
-	// github.com/xoctopus/typex/testdata.AliasSerialized
-	// github.com/xoctopus/typex/testdata.AliasWithTArg[X github.com/xoctopus/typex/testdata.CanBeSerialized]
+	// github.com/xoctopus/typx/testdata.AliasInt
+	// github.com/xoctopus/typx/testdata.AliasUnion
+	// github.com/xoctopus/typx/testdata.AliasSerialized
+	// github.com/xoctopus/typx/testdata.AliasWithTArg[X github.com/xoctopus/typx/testdata.CanBeSerialized]
 }

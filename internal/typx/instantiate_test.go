@@ -8,8 +8,8 @@ import (
 
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal/typx"
-	"github.com/xoctopus/typex/testdata"
+	"github.com/xoctopus/typx/internal/typx"
+	"github.com/xoctopus/typx/testdata"
 )
 
 func TestInstantiate(t *testing.T) {
@@ -29,7 +29,7 @@ func TestInstantiate(t *testing.T) {
 	})
 
 	t.Run("Generic", func(t *testing.T) {
-		pkg := typx.Load("github.com/xoctopus/typex/testdata")
+		pkg := typx.Load("github.com/xoctopus/typx/testdata")
 		typ := typx.Lookup[types.Type](pkg, "Generics")
 
 		instantiated := typx.Instantiate(typ.Underlying(), tInt).(*types.Struct)

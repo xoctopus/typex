@@ -6,8 +6,8 @@ import (
 
 	. "github.com/xoctopus/x/testx"
 
-	lit "github.com/xoctopus/typex/internal/typx"
-	"github.com/xoctopus/typex/pkg/typx"
+	lit "github.com/xoctopus/typx/internal/typx"
+	"github.com/xoctopus/typx/pkg/typx"
 )
 
 type (
@@ -37,7 +37,7 @@ func TestDeref(t *testing.T) {
 
 	rt = typx.NewRType(reflect.TypeFor[T3]())
 	dt = typx.Deref(rt)
-	Expect(t, dt.String(), Equal("github.com/xoctopus/typex/pkg/typx_test.T3"))
+	Expect(t, dt.String(), Equal("github.com/xoctopus/typx/pkg/typx_test.T3"))
 }
 
 func TestPosOfStructField(t *testing.T) {

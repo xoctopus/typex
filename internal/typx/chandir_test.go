@@ -8,7 +8,7 @@ import (
 
 	. "github.com/xoctopus/x/testx"
 
-	"github.com/xoctopus/typex/internal/typx"
+	"github.com/xoctopus/typx/internal/typx"
 )
 
 func TestChanDir(t *testing.T) {

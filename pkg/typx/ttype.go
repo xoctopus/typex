@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/xoctopus/x/misc/must"
 
-	"github.com/xoctopus/typex/internal/typx"
+	"github.com/xoctopus/typx/internal/typx"
 )
 
 func NewTType(t types.Type) Type {
