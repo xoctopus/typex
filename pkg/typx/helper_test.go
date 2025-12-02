@@ -41,7 +41,7 @@ func TestDeref(t *testing.T) {
 }
 
 func TestPosOfStructField(t *testing.T) {
-	tt := typx.NewTType(lit.NewLitType(reflect.TypeOf(T1{})).Type())
+	tt := typx.NewTType(lit.NewTTByRT(reflect.TypeOf(T1{})))
 	Expect(t, typx.PosOfStructField(tt.Field(0)), NotEqual(0))
 
 	rt := typx.NewRType(reflect.TypeOf(T1{}))

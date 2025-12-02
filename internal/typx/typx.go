@@ -14,13 +14,10 @@ import (
 )
 
 // type LitType interface {
-// 	// Underlying returns literal type's underlying, it must be `reflect.Type` or `types.Type`
 // 	Underlying() any
-// 	// PkgPath returns type's full package path
 // 	PkgPath() string
 // 	// Name returns type's name with type arguments
 // 	Name() string
-// 	// String return type's string with full package path everywhere
 // 	String() string
 // 	// Type returns type's types.Type
 // 	// Type() types.Type
@@ -28,7 +25,6 @@ import (
 // 	// representation shown in source code
 // 	// Lit(context.Context) string
 //
-// 	// literal returns type string. if w == true returns wrapped string
 // 	literal(bool) string
 // }
 
@@ -59,10 +55,10 @@ func NewLitType(t any) (x *LitType) {
 	}()
 
 	id := Wrap(t)
-	return NewTypeByID(id)
+	return NewLitTypeByID(id)
 }
 
-func NewTypeByID(id string) (x *LitType) {
+func NewLitTypeByID(id string) (x *LitType) {
 	ident := func(code string, x ast.Node) string {
 		return code[x.Pos()-1 : x.End()-1]
 	}
@@ -73,19 +69,19 @@ func NewTypeByID(id string) (x *LitType) {
 		if e.Len != nil {
 			return &LitType{
 				kind: reflect.Array,
-				ele:  NewTypeByID(ident(id, e.Elt)),
+				ele:  NewLitTypeByID(ident(id, e.Elt)),
 				len:  must.NoErrorV(stringsx.Atoi(ident(id, e.Len))),
 			}
 		}
 		return &LitType{
 			kind: reflect.Slice,
-			ele:  NewTypeByID(ident(id, e.Elt)),
+			ele:  NewLitTypeByID(ident(id, e.Elt)),
 		}
 	case *ast.ChanType:
 		return &LitType{
 			kind: reflect.Chan,
 			dir:  e.Dir,
-			ele:  NewTypeByID(ident(id, e.Value)),
+			ele:  NewLitTypeByID(ident(id, e.Value)),
 		}
 	case *ast.FuncType:
 		u := &LitType{kind: reflect.Func}
@@ -95,16 +91,16 @@ func NewTypeByID(id string) (x *LitType) {
 				param := ident(id, p.Type)
 				if i == len(e.Params.List)-1 && strings.HasPrefix(param, "...") {
 					u.variadic = true
-					u.ins[i] = NewTypeByID("[]" + param[3:])
+					u.ins[i] = NewLitTypeByID("[]" + param[3:])
 					break
 				}
-				u.ins[i] = NewTypeByID(param)
+				u.ins[i] = NewLitTypeByID(param)
 			}
 		}
 		if e.Results != nil && len(e.Results.List) > 0 {
 			u.outs = make([]*LitType, len(e.Results.List))
 			for i, r := range e.Results.List {
-				u.outs[i] = NewTypeByID(ident(id, r.Type))
+				u.outs[i] = NewLitTypeByID(ident(id, r.Type))
 			}
 		}
 		return u
@@ -114,7 +110,7 @@ func NewTypeByID(id string) (x *LitType) {
 			methods: make([]*LitType, len(e.Methods.List)),
 		}
 		for i, m := range e.Methods.List {
-			mi := NewTypeByID("func" + ident(id, m.Type))
+			mi := NewLitTypeByID("func" + ident(id, m.Type))
 			mi.name = m.Names[0].Name
 			u.methods[i] = mi
 		}
@@ -122,13 +118,13 @@ func NewTypeByID(id string) (x *LitType) {
 	case *ast.MapType:
 		return &LitType{
 			kind: reflect.Map,
-			key:  NewTypeByID(ident(id, e.Key)),
-			ele:  NewTypeByID(ident(id, e.Value)),
+			key:  NewLitTypeByID(ident(id, e.Key)),
+			ele:  NewLitTypeByID(ident(id, e.Value)),
 		}
 	case *ast.StarExpr:
 		return &LitType{
 			kind: reflect.Pointer,
-			ele:  NewTypeByID(ident(id, e.X)),
+			ele:  NewLitTypeByID(ident(id, e.X)),
 		}
 	case *ast.StructType:
 		u := &LitType{kind: reflect.Struct}
@@ -136,7 +132,7 @@ func NewTypeByID(id string) (x *LitType) {
 			u.fields = make([]*LitType, 0, len(e.Fields.List))
 
 			for _, f := range e.Fields.List {
-				ft := NewTypeByID(ident(id, f.Type))
+				ft := NewLitTypeByID(ident(id, f.Type))
 				if f.Tag != nil {
 					ft.tag = must.NoErrorV(strconv.Unquote(f.Tag.Value))
 				}
@@ -167,14 +163,14 @@ func NewTypeByID(id string) (x *LitType) {
 		}
 		return u
 	case *ast.IndexExpr:
-		u := NewTypeByID(ident(id, e.X))
-		u.targs = []*LitType{NewTypeByID(ident(id, e.Index))}
+		u := NewLitTypeByID(ident(id, e.X))
+		u.targs = []*LitType{NewLitTypeByID(ident(id, e.Index))}
 		return u
 	case *ast.IndexListExpr:
-		u := NewTypeByID(ident(id, e.X))
+		u := NewLitTypeByID(ident(id, e.X))
 		u.targs = make([]*LitType, len(e.Indices))
 		for i, index := range e.Indices {
-			u.targs[i] = NewTypeByID(ident(id, index))
+			u.targs[i] = NewLitTypeByID(ident(id, index))
 		}
 		return u
 	default:
@@ -209,14 +205,12 @@ type LitType struct {
 	embedded   bool
 }
 
-func (t *LitType) Underlying() any {
-	return t.underlying
-}
-
+// PkgPath returns type's full package path
 func (t *LitType) PkgPath() string {
 	return DecodePath(t.pkg)
 }
 
+// Name returns type's typename with instantiated type arguments.
 func (t *LitType) Name() string {
 	if t.typename == "" || len(t.targs) == 0 {
 		return t.typename
@@ -235,6 +229,8 @@ func (t *LitType) Name() string {
 	return b.String()
 }
 
+// Kind return literal type kind. it can be seen only when type is unnamed or basic.
+// If type is named type. use pkg/typx.Type instead
 func (t *LitType) Kind() reflect.Kind {
 	return t.kind
 }
@@ -353,93 +349,12 @@ func (t *LitType) literal(w bool) string {
 	}
 }
 
+// Literal returns wrapped type string, this will treat all package path as an identifier.
 func (t *LitType) Literal() string {
 	return t.literal(true)
 }
 
+// String return type's string with full package path everywhere
 func (t *LitType) String() string {
 	return t.literal(false)
-}
-
-func (t *LitType) Type() (x types.Type) {
-	if tt, ok := t.underlying.(types.Type); ok {
-		return tt
-	}
-
-	if t.typename != "" {
-		if x, ok := gTBasicKinds.Load(t.typename); ok && t.pkg == "" {
-			return x
-		}
-		if t.pkg == "unsafe" && t.typename == "Pointer" {
-			return types.Typ[types.UnsafePointer]
-		}
-
-		must.BeTrue(t.pkg != "")
-		typ := Lookup[*types.Named](Load(t.PkgPath()), t.typename)
-		must.BeTrue(typ != nil)
-		must.BeTrue(typ.TypeParams().Len() == len(t.targs))
-		if len(t.targs) > 0 {
-			args := make([]types.Type, len(t.targs))
-			for i, arg := range t.targs {
-				args[i] = arg.Type()
-			}
-			typ = Instantiate(typ, args...).(*types.Named)
-		}
-		return typ
-	}
-
-	switch t.kind {
-	case reflect.Array:
-		return types.NewArray(t.ele.Type(), int64(t.len))
-	case reflect.Chan:
-		return types.NewChan(TChanDir(t.dir), t.ele.Type())
-	case reflect.Func:
-		ins := make([]*types.Var, len(t.ins))
-		for i, v := range t.ins {
-			pkg := (*types.Package)(nil)
-			if path := v.PkgPath(); path != "" {
-				pkg = types.NewPackage(path, "")
-			}
-			ins[i] = types.NewParam(0, pkg, "", v.Type())
-		}
-		outs := make([]*types.Var, len(t.outs))
-		for i, v := range t.outs {
-			pkg := (*types.Package)(nil)
-			if path := v.PkgPath(); path != "" {
-				pkg = types.NewPackage(path, "")
-			}
-			outs[i] = types.NewParam(0, pkg, "", v.Type())
-		}
-		return types.NewSignatureType(
-			nil, nil, nil,
-			types.NewTuple(ins...), types.NewTuple(outs...),
-			t.variadic,
-		)
-	case reflect.Interface:
-		methods := make([]*types.Func, len(t.methods))
-		for i, m := range t.methods {
-			s := m.Type().(*types.Signature)
-			methods[i] = types.NewFunc(0, nil, m.name, s)
-		}
-		return types.NewInterfaceType(methods, nil)
-	case reflect.Map:
-		return types.NewMap(t.key.Type(), t.ele.Type())
-	case reflect.Pointer:
-		return types.NewPointer(t.ele.Type())
-	case reflect.Slice:
-		return types.NewSlice(t.ele.Type())
-	default:
-		must.BeTrueF(t.kind == reflect.Struct, "unexpected kind %s", t.kind)
-		fields := make([]*types.Var, len(t.fields))
-		tags := make([]string, len(t.fields))
-		for i, f := range t.fields {
-			pkg := (*types.Package)(nil)
-			if path := f.PkgPath(); path != "" {
-				pkg = types.NewPackage(path, "")
-			}
-			fields[i] = types.NewField(0, pkg, f.name, f.Type(), f.embedded)
-			tags[i] = f.tag
-		}
-		return types.NewStruct(fields, tags)
-	}
 }

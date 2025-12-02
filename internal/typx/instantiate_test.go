@@ -54,17 +54,17 @@ func TestInstantiate(t *testing.T) {
 		for v := range instantiated.Fields() {
 			t.Run(v.Name(), func(t *testing.T) {
 				rt := assertions[v.Name()]
-				tt := typx.NewLitType(rt).Type()
+				tt := typx.NewTTByRT(rt)
 
 				Expect(t, tt.String(), Equal(v.Type().String()))
 			})
 		}
 
 		underlying := typx.Underlying(
-			typx.NewLitType(reflect.TypeFor[testdata.Generics[int]]()).Type(),
+			typx.NewTTByRT(reflect.TypeFor[testdata.Generics[int]]()),
 		)
-		t.Log(instantiated.String())
-		t.Log(underlying.String())
+		// t.Log(instantiated.String())
+		// t.Log(underlying.String())
 
 		Expect(t, instantiated.String(), Equal(underlying.String()))
 	})

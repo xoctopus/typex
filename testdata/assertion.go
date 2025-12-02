@@ -71,7 +71,7 @@ func (b *CompareBundles) Name() string {
 
 func (b *CompareBundles) Init() {
 	rt := b.rtyp
-	tt := lit.NewLitType(b.rtyp).Type()
+	tt := lit.NewTTByRT(b.rtyp)
 	b.types = []*CompareBundle{
 		{"ReflectType", rt},
 		{"TypesType", tt},
@@ -103,7 +103,7 @@ func (bc *Bundle) Init() {
 				name: name,
 				r:    t,
 				rt:   instantiations[0](t),
-				tt:   instantiations[1](lit.NewLitType(t).Type()),
+				tt:   instantiations[1](lit.NewTTByRT(t)),
 			})
 			t = reflect.PointerTo(t)
 			name = name + "Ptr"

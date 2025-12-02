@@ -56,7 +56,7 @@ func (t *rtype) Implements(u any) bool {
 		return false
 	case types.Type:
 		if i, ok := x.Underlying().(*types.Interface); ok {
-			return types.Implements(typx.NewLitType(t.t).Type(), i)
+			return types.Implements(typx.NewTTByRT(t.t), i)
 		}
 		return false
 	default:
@@ -71,7 +71,7 @@ func (t *rtype) AssignableTo(u any) bool {
 	case reflect.Type:
 		return t.t.AssignableTo(x)
 	case types.Type:
-		return types.AssignableTo(typx.NewLitType(t.t).Type(), x)
+		return types.AssignableTo(typx.NewTTByRT(t.t), x)
 	default:
 		return false
 	}
@@ -84,7 +84,7 @@ func (t *rtype) ConvertibleTo(u any) bool {
 	case reflect.Type:
 		return t.t.ConvertibleTo(x)
 	case types.Type:
-		return types.ConvertibleTo(typx.NewLitType(t.t).Type(), x)
+		return types.ConvertibleTo(typx.NewTTByRT(t.t), x)
 	default:
 		return false
 	}

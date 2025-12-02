@@ -27,7 +27,7 @@ func TestInspectMethods(t *testing.T) {
 	for i := range rtyp.NumField() {
 		f := rtyp.Field(i)
 		rt := f.Type
-		tt := typx.NewLitType(rt).Type()
+		tt := typx.NewTTByRT(rt)
 		name := f.Name
 
 		for range 2 {
@@ -41,9 +41,9 @@ func TestInspectMethods(t *testing.T) {
 	}
 
 	t.Run("MultiLevelPointer", func(t *testing.T) {
-		tt := typx.NewLitType(reflect.TypeFor[**testdata.UnambiguousL1AndL2x2]()).Type()
+		tt := typx.NewTTByRT(reflect.TypeFor[**testdata.UnambiguousL1AndL2x2]())
 		Expect(t, len(typx.InspectMethods(tt)), Equal(0))
-		tt = typx.NewLitType(reflect.TypeFor[*error]()).Type()
+		tt = typx.NewTTByRT(reflect.TypeFor[*error]())
 		Expect(t, len(typx.InspectMethods(tt)), Equal(0))
 	})
 }
@@ -59,7 +59,7 @@ func TestInspectField(t *testing.T) {
 		t.Run(fi.Name, func(t *testing.T) {
 			for j := range rti.NumField() {
 				fj := rti.Field(j)
-				tt := typx.NewLitType(rti).Type()
+				tt := typx.NewTTByRT(rti)
 
 				tf := typx.FieldByName(tt, fj.Name)
 				Expect(t, tf.Var().Name(), Equal(fj.Name))

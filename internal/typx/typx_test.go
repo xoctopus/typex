@@ -17,25 +17,16 @@ func TestLitType(t *testing.T) {
 
 			Expect(t, rt.String(), Equal(c.origin))
 			Expect(t, rt.Literal(), Equal(c.expect))
-			Expect(t, rt.Underlying(), Equal[any](c.rt))
 			Expect(t, rt.PkgPath(), Equal(c.PkgPath))
 			Expect(t, rt.Name(), Equal(c.Name))
 
 			Expect(t, tt.String(), Equal(c.origin))
 			Expect(t, tt.Literal(), Equal(c.expect))
-			Expect(t, tt.Underlying(), Equal[any](c.tt))
 			Expect(t, tt.PkgPath(), Equal(c.PkgPath))
 			Expect(t, tt.Name(), Equal(c.Name))
-
-			rts := rt.Type().String()
-			tts := tt.Type().String()
-			if rts != tts {
-				t.Log("R:", rts)
-				t.Log("T:", tts)
-			}
 		})
 	}
-	t.Run("CoverCache", func(t *testing.T) {
+	t.Run("HitCache", func(t *testing.T) {
 		for _, c := range LitTypeCases {
 			t.Run(c.name, func(t *testing.T) {
 				rt := typx.NewLitType(c.rt)
@@ -43,13 +34,11 @@ func TestLitType(t *testing.T) {
 
 				Expect(t, rt.String(), Equal(c.origin))
 				Expect(t, rt.Literal(), Equal(c.expect))
-				Expect(t, rt.Underlying(), Equal[any](c.rt))
 				Expect(t, rt.PkgPath(), Equal(c.PkgPath))
 				Expect(t, rt.Name(), Equal(c.Name))
 
 				Expect(t, tt.String(), Equal(c.origin))
 				Expect(t, tt.Literal(), Equal(c.expect))
-				Expect(t, tt.Underlying(), Equal[any](c.tt))
 				Expect(t, tt.PkgPath(), Equal(c.PkgPath))
 				Expect(t, tt.Name(), Equal(c.Name))
 
