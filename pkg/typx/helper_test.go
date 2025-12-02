@@ -1,6 +1,7 @@
 package typx_test
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -46,4 +47,8 @@ func TestPosOfStructField(t *testing.T) {
 
 	rt := typx.NewRType(reflect.TypeOf(T1{}))
 	Expect(t, typx.PosOfStructField(rt.Field(0)), Equal(0))
+}
+
+func TestTypeLit(t *testing.T) {
+	Expect(t, typx.TypeLit(context.Background(), reflect.TypeFor[int]()), Equal("int"))
 }

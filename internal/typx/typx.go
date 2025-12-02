@@ -1,6 +1,7 @@
 package typx
 
 import (
+	"context"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/xoctopus/x/misc/must"
 	"github.com/xoctopus/x/stringsx"
+
+	"github.com/xoctopus/typx/internal/dumper"
 )
 
 // type LitType interface {
@@ -235,14 +238,19 @@ func (t *LitType) Kind() reflect.Kind {
 	return t.kind
 }
 
-func (t *LitType) literal(w bool) string {
+func (t *LitType) literal(ctx context.Context) string {
 	if t.typename != "" {
 		b := strings.Builder{}
 		if path := t.pkg; path != "" {
-			if !w {
-				path = DecodePath(path) // origin
+			if namer, ok := dumper.CtxPkgNamer.From(ctx); ok {
+				path = namer.PackageName(DecodePath(path))
 			} else {
-				path = EncodePath(path) // wrapped
+				w, _ := dumper.CtxWrapID.From(ctx)
+				if !w {
+					path = DecodePath(path) // origin
+				} else {
+					path = EncodePath(path) // wrapped
+				}
 			}
 			b.WriteString(path)
 			b.WriteString(".")
@@ -254,7 +262,7 @@ func (t *LitType) literal(w bool) string {
 				if i > 0 {
 					b.WriteString(",")
 				}
-				b.WriteString(targ.literal(w))
+				b.WriteString(targ.literal(ctx))
 			}
 			b.WriteRune(']')
 		}
@@ -263,9 +271,9 @@ func (t *LitType) literal(w bool) string {
 
 	switch t.kind {
 	case reflect.Array:
-		return fmt.Sprintf("[%d]%s", t.len, t.ele.literal(w))
+		return fmt.Sprintf("[%d]%s", t.len, t.ele.literal(ctx))
 	case reflect.Chan:
-		return fmt.Sprintf("%s%s", ChanDir(t.dir), t.ele.literal(w))
+		return fmt.Sprintf("%s%s", ChanDir(t.dir), t.ele.literal(ctx))
 	case reflect.Func:
 		b := strings.Builder{}
 
@@ -279,10 +287,10 @@ func (t *LitType) literal(w bool) string {
 				b.WriteString(", ")
 			}
 			if i == len(t.ins)-1 && t.variadic {
-				b.WriteString("..." + t.ins[i].literal(w)[2:])
+				b.WriteString("..." + t.ins[i].literal(ctx)[2:])
 				break
 			}
-			b.WriteString(t.ins[i].literal(w))
+			b.WriteString(t.ins[i].literal(ctx))
 		}
 		b.WriteString(")")
 
@@ -297,7 +305,7 @@ func (t *LitType) literal(w bool) string {
 			if i > 0 {
 				b.WriteString(", ")
 			}
-			b.WriteString(v.literal(w))
+			b.WriteString(v.literal(ctx))
 		}
 		if len(t.outs) > 1 {
 			b.WriteString(")")
@@ -313,16 +321,16 @@ func (t *LitType) literal(w bool) string {
 			if i > 0 {
 				b.WriteString("; ")
 			}
-			b.WriteString(m.literal(w))
+			b.WriteString(m.literal(ctx))
 		}
 		b.WriteString(" }")
 		return b.String()
 	case reflect.Map:
-		return fmt.Sprintf("map[%s]%s", t.key.literal(w), t.ele.literal(w))
+		return fmt.Sprintf("map[%s]%s", t.key.literal(ctx), t.ele.literal(ctx))
 	case reflect.Pointer:
-		return "*" + t.ele.literal(w)
+		return "*" + t.ele.literal(ctx)
 	case reflect.Slice:
-		return "[]" + t.ele.literal(w)
+		return "[]" + t.ele.literal(ctx)
 	default:
 		must.BeTrueF(t.kind == reflect.Struct, "got unexpected kind %s", t.kind)
 		if len(t.fields) == 0 {
@@ -338,7 +346,7 @@ func (t *LitType) literal(w bool) string {
 				b.WriteString(f.name)
 				b.WriteString(" ")
 			}
-			b.WriteString(f.literal(w))
+			b.WriteString(f.literal(ctx))
 			if len(f.tag) > 0 {
 				b.WriteString(" ")
 				b.WriteString(strconv.Quote(f.tag))
@@ -349,12 +357,12 @@ func (t *LitType) literal(w bool) string {
 	}
 }
 
-// Literal returns wrapped type string, this will treat all package path as an identifier.
-func (t *LitType) Literal() string {
-	return t.literal(true)
+// Dump returns wrapped type string, this will treat all package path as an identifier.
+func (t *LitType) Dump(ctx context.Context) string {
+	return t.literal(ctx)
 }
 
 // String return type's string with full package path everywhere
 func (t *LitType) String() string {
-	return t.literal(false)
+	return t.literal(dumper.CtxWrapID.With(context.Background(), false))
 }
