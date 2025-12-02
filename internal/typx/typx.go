@@ -252,8 +252,10 @@ func (t *LitType) literal(ctx context.Context) string {
 					path = EncodePath(path) // wrapped
 				}
 			}
-			b.WriteString(path)
-			b.WriteString(".")
+			if path != "" {
+				b.WriteString(path)
+				b.WriteString(".")
+			}
 		}
 		b.WriteString(t.typename)
 		if len(t.targs) > 0 {
