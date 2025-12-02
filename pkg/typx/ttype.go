@@ -2,10 +2,10 @@ package typx
 
 import (
 	"context"
+	"fmt"
 	"go/types"
 	"reflect"
 
-	"github.com/pkg/errors"
 	"github.com/xoctopus/x/misc/must"
 
 	"github.com/xoctopus/typx/internal/typx"
@@ -18,7 +18,7 @@ func NewTType(t types.Type) Type {
 	)
 	switch x := t.(type) {
 	case *types.Union, *types.Tuple, *types.TypeParam:
-		panic(errors.Errorf("invalid NewTType by types.Type from `%T`", x))
+		panic(fmt.Errorf("invalid NewTType by types.Type from `%T`", x))
 	case *types.Alias:
 		xt = x.Rhs()
 		alias = x

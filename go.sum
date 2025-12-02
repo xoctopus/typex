@@ -1,15 +1,7 @@
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
-github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
-github.com/xoctopus/pkgx v0.1.1-0.20251127115730-40f38b1c6085 h1:npqxt7EcrvYZTienwVicwN/yOhBpTa5FPVG1CRzm4Nw=
-github.com/xoctopus/pkgx v0.1.1-0.20251127115730-40f38b1c6085/go.mod h1:q0PmQlzsqNXbPzmUs+a+/5PkZAAZWYo0A8IUHqhUt/I=
-github.com/xoctopus/pkgx/testdata v1.0.0 h1:wn8ybhu+LWxuHzqGaZMff2Lik9trL8rkPwyZyqKQT3E=
-github.com/xoctopus/pkgx/testdata v1.0.0/go.mod h1:hM3Pd+eByHRAG1plTMLXVBFzEdYqG3h7B5sHvOu2+iU=
 github.com/xoctopus/x v0.2.1-0.20251201141130-c5c4272e482d h1:OVjJC6D9xOQ762IwdoQmU3tHLZfd/ypCn1DHZdaMsf0=
 github.com/xoctopus/x v0.2.1-0.20251201141130-c5c4272e482d/go.mod h1:50E7nA4s9BB4jgDmd59IqyluaJCxoUnS7QPi3nCyLFw=
-golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39 h1:DHNhtq3sNNzrvduZZIiFyXWOL9IWaDPHqTnLJp+rCBY=
-golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39/go.mod h1:46edojNIoXTNOhySWIWdix628clX9ODXwPsQuG6hsK0=
 golang.org/x/mod v0.30.0 h1:fDEXFVZ/fmCKProc/yAXXUijritrDzahmwwefnjoPFk=
 golang.org/x/mod v0.30.0/go.mod h1:lAsf5O2EvJeSFMiBxXDki7sCgAxEUcZHXoXMKT4GJKc=
 golang.org/x/sync v0.18.0 h1:kr88TuHDroi+UVf+0hZnirlk8o8T+4MrK6mr60WkH/I=

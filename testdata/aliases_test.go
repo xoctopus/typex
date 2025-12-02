@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"go/types"
 
-	"github.com/xoctopus/pkgx"
+	typi "github.com/xoctopus/typx/internal/typx"
 )
 
 func Example_aliases() {
@@ -14,7 +14,7 @@ func Example_aliases() {
 		"AliasSerialized",
 		"AliasWithTArg",
 	} {
-		x := pkgx.MustLookup[*types.Alias](Context, "github.com/xoctopus/typx/testdata", name)
+		x := typi.Lookup[*types.Alias](typi.Load("github.com/xoctopus/typx/testdata"), name)
 		fmt.Println(x)
 
 		// x.
