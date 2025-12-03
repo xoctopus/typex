@@ -94,10 +94,11 @@ func (t *ttype) Implements(u any) bool {
 		}
 		return false
 	case reflect.Type:
-		if x.Kind() != reflect.Interface {
-			return false
-		}
-		return t.Implements(typx.NewTTByRT(x))
+		// if x.Kind() != reflect.Interface {
+		// 	return false
+		// }
+		// return t.Implements(typx.NewTTByRT(x))
+		return false
 	default:
 		return false
 	}
@@ -108,7 +109,8 @@ func (t *ttype) AssignableTo(u any) bool {
 	case Type:
 		return t.AssignableTo(x.Unwrap())
 	case reflect.Type:
-		return types.AssignableTo(t.t, typx.NewTTByRT(x))
+		// return types.AssignableTo(t.t, typx.NewTTByRT(x))
+		return false
 	case types.Type:
 		return types.AssignableTo(t.t, x)
 	default:
@@ -121,7 +123,8 @@ func (t *ttype) ConvertibleTo(u any) bool {
 	case Type:
 		return t.ConvertibleTo(x.Unwrap())
 	case reflect.Type:
-		return types.ConvertibleTo(t.t, typx.NewTTByRT(x))
+		// return types.ConvertibleTo(t.t, typx.NewTTByRT(x))
+		return false
 	case types.Type:
 		return types.ConvertibleTo(t.t, x)
 	default:

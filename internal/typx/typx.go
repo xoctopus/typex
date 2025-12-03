@@ -16,21 +16,6 @@ import (
 	"github.com/xoctopus/typx/internal/dumper"
 )
 
-// type LitType interface {
-// 	Underlying() any
-// 	PkgPath() string
-// 	// Name returns type's name with type arguments
-// 	Name() string
-// 	String() string
-// 	// Type returns type's types.Type
-// 	// Type() types.Type
-// 	// Lit returns type's literal, it should be consistent with the literal
-// 	// representation shown in source code
-// 	// Lit(context.Context) string
-//
-// 	literal(bool) string
-// }
-
 func NewLitType(t any) (x *LitType) {
 	switch u := t.(type) {
 	case reflect.Type:

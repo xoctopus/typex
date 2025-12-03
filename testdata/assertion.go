@@ -2,6 +2,7 @@ package testdata
 
 import (
 	"fmt"
+	"go/types"
 	"reflect"
 	"testing"
 
@@ -14,30 +15,55 @@ import (
 )
 
 var (
-	instantiations [2]func(any) typx.Type
-
-	Bundles = []*CompareBundles{
-		{name: "Stringer", rtyp: reflect.TypeFor[fmt.Stringer]()},
-		{name: "Bytes", rtyp: reflect.TypeFor[interface{ Bytes() []byte }]()},
-		{name: "EmptyInterface", rtyp: reflect.TypeFor[any]()},
-		{name: "Error", rtyp: reflect.TypeFor[error]()},
-		{name: "EmptyStruct", rtyp: reflect.TypeFor[struct{}]()},
-		{name: "Struct", rtyp: reflect.TypeFor[struct{ some any }]()},
+	Compares = []*CompareBundles{
+		{
+			name: "Stringer",
+			rtyp: reflect.TypeFor[fmt.Stringer](),
+		},
+		{
+			name: "Bytes",
+			rtyp: reflect.TypeFor[interface{ Bytes() []byte }](),
+		},
+		{
+			name: "EmptyInterface",
+			rtyp: reflect.TypeFor[any](),
+		},
+		{
+			name: "Error",
+			rtyp: reflect.TypeFor[error](),
+		},
+		{
+			name: "EmptyStruct",
+			rtyp: reflect.TypeFor[struct{}](),
+		},
+		{
+			name: "Struct",
+			rtyp: reflect.TypeFor[struct{ some any }](),
+		},
 	}
 
 	Cases = BundleCases{
-		&Bundle{name: "Basics", v: Basics{}},
-		&Bundle{name: "Composites", v: Composites{}},
-		&Bundle{name: "Functions", v: Functions{}},
-		&Bundle{name: "Structures", v: Structures{}},
+		&Bundle{
+			name: "Basics",
+			v:    Basics{},
+		},
+		&Bundle{
+			name: "Composites",
+			v:    Composites{},
+		},
+		&Bundle{
+			name: "Functions",
+			v:    Functions{},
+		},
+		&Bundle{
+			name: "Structures",
+			v:    Structures{},
+		},
 	}
 )
 
-func RegisterInstantiations(f1, f2 func(any) typx.Type) {
-	instantiations[0] = f1
-	instantiations[1] = f2
-
-	for _, b := range Bundles {
+func init() {
+	for _, b := range Compares {
 		b.Init()
 	}
 
@@ -59,10 +85,11 @@ func (b *CompareBundle) T() any {
 	return b.typ
 }
 
+// CompareBundles helps to check Implements/AssignableTo/ConvertibleTo
 type CompareBundles struct {
 	name  string
 	rtyp  reflect.Type
-	types []*CompareBundle
+	types []typx.Type
 }
 
 func (b *CompareBundles) Name() string {
@@ -72,16 +99,75 @@ func (b *CompareBundles) Name() string {
 func (b *CompareBundles) Init() {
 	rt := b.rtyp
 	tt := lit.NewTTByRT(b.rtyp)
-	b.types = []*CompareBundle{
-		{"ReflectType", rt},
-		{"TypesType", tt},
-		{"RType", instantiations[0](rt)},
-		{"TType", instantiations[1](tt)},
-	}
+	b.types = []typx.Type{typx.NewRType(rt), typx.NewTType(tt)}
 }
 
-func (b *CompareBundles) Types() []*CompareBundle {
-	return b.types
+func (b *CompareBundles) AssignableTo(t *testing.T, c *Case) {
+	t.Run(b.Name(), func(t *testing.T) {
+		for _, v := range b.types {
+			switch x := v.Unwrap().(type) {
+			case reflect.Type:
+				expect := c.r.AssignableTo(x)
+				Expect(t, c.rt.AssignableTo(x), Equal(expect))
+				Expect(t, c.rt.AssignableTo(v), Equal(expect))
+				Expect(t, c.tt.AssignableTo(x), BeFalse())
+				Expect(t, c.tt.AssignableTo(v), BeFalse())
+			case types.Type:
+				expect := types.AssignableTo(c.t, x)
+				Expect(t, c.rt.AssignableTo(x), BeFalse())
+				Expect(t, c.rt.AssignableTo(v), BeFalse())
+				Expect(t, c.tt.AssignableTo(x), Equal(expect))
+				Expect(t, c.tt.AssignableTo(v), Equal(expect))
+			}
+		}
+	})
+}
+
+func (b *CompareBundles) ConvertibleTo(t *testing.T, c *Case) {
+	t.Run(b.Name(), func(t *testing.T) {
+		for _, v := range b.types {
+			switch x := v.Unwrap().(type) {
+			case reflect.Type:
+				expect := c.r.ConvertibleTo(x)
+				Expect(t, c.rt.ConvertibleTo(x), Equal(expect))
+				Expect(t, c.rt.ConvertibleTo(v), Equal(expect))
+				Expect(t, c.tt.ConvertibleTo(x), BeFalse())
+				Expect(t, c.tt.ConvertibleTo(v), BeFalse())
+			case types.Type:
+				expect := types.ConvertibleTo(c.t, x)
+				Expect(t, c.rt.ConvertibleTo(x), BeFalse())
+				Expect(t, c.rt.ConvertibleTo(v), BeFalse())
+				Expect(t, c.tt.ConvertibleTo(x), Equal(expect))
+				Expect(t, c.tt.ConvertibleTo(v), Equal(expect))
+			}
+		}
+	})
+}
+
+func (b *CompareBundles) Implements(t *testing.T, c *Case) {
+	t.Run(b.Name(), func(t *testing.T) {
+		for _, v := range b.types {
+			if b.rtyp.Kind() != reflect.Interface {
+				Expect(t, c.rt.Implements(v), BeFalse())
+				Expect(t, c.tt.Implements(v), BeFalse())
+				continue
+			}
+			switch x := v.Unwrap().(type) {
+			case reflect.Type:
+				expect := c.r.Implements(x)
+				Expect(t, c.rt.Implements(x), Equal(expect))
+				Expect(t, c.rt.Implements(v), Equal(expect))
+				Expect(t, c.tt.Implements(x), BeFalse())
+				Expect(t, c.tt.Implements(v), BeFalse())
+			case types.Type:
+				expect := types.Implements(c.t, x.Underlying().(*types.Interface))
+				Expect(t, c.rt.Implements(x), BeFalse())
+				Expect(t, c.rt.Implements(v), BeFalse())
+				Expect(t, c.tt.Implements(x), Equal(expect))
+				Expect(t, c.tt.Implements(v), Equal(expect))
+			}
+		}
+	})
 }
 
 type Bundle struct {
@@ -91,29 +177,26 @@ type Bundle struct {
 }
 
 func (bc *Bundle) Init() {
-	rt := reflect.TypeOf(bc.v)
-	must.BeTrue(rt.Kind() == reflect.Struct)
+	bundle := reflect.TypeOf(bc.v)
+	must.BeTrue(bundle.Kind() == reflect.Struct)
 
-	for i := range rt.NumField() {
-		f := rt.Field(i)
-		t := f.Type
+	for i := range bundle.NumField() {
+		f := bundle.Field(i)
+		rt := f.Type
+		tt := lit.NewTTByRT(rt)
 		name := f.Name
 		for range 2 {
 			bc.cases = append(bc.cases, &Case{
 				name: name,
-				r:    t,
-				rt:   instantiations[0](t),
-				tt:   instantiations[1](lit.NewTTByRT(t)),
+				r:    rt,
+				t:    tt,
+				rt:   typx.NewRType(rt),
+				tt:   typx.NewTType(tt),
 			})
-			t = reflect.PointerTo(t)
+			rt = reflect.PointerTo(rt)
+			tt = types.NewPointer(tt)
 			name = name + "Ptr"
 		}
-	}
-}
-
-func (bc *Bundle) Run(t *testing.T) {
-	for _, c := range bc.cases {
-		t.Run(c.name, c.Run)
 	}
 }
 
@@ -121,8 +204,10 @@ func (bc *Bundle) Name() string {
 	return bc.name
 }
 
-func (bc *Bundle) Cases() []*Case {
-	return bc.cases
+func (bc *Bundle) Run(t *testing.T) {
+	for _, c := range bc.cases {
+		t.Run(c.name, c.Run)
+	}
 }
 
 type BundleCases []*Bundle
@@ -202,6 +287,7 @@ func (mas MethodAssertions) Run(t *testing.T) {
 type Case struct {
 	name string
 	r    reflect.Type
+	t    types.Type
 	rt   typx.Type
 	tt   typx.Type
 }
@@ -223,22 +309,10 @@ func (c *Case) Run(t *testing.T) {
 		Expect(t, c.rt.Name(), Equal(c.r.Name()))
 		Expect(t, c.tt.Name(), Equal(c.r.Name()))
 	})
-	// t.Run("Literal", func(t *testing.T) {
-	// 	Expect(t, c.rt.String(), Equal(c.tt.String()))
-	// 	Expect(t, c.rt.TypeLit(context.Background()), Equal(c.tt.TypeLit(context.Background())))
-	// })
 
 	t.Run("Implements", func(t *testing.T) {
-		for _, b := range Bundles {
-			t.Run(b.Name(), func(t *testing.T) {
-				expect := b.rtyp.Kind() == reflect.Interface && c.r.Implements(b.rtyp)
-				for _, v := range b.Types() {
-					t.Run(v.Name(), func(t *testing.T) {
-						Expect(t, c.rt.Implements(v.T()), Equal(expect))
-						Expect(t, c.tt.Implements(v.T()), Equal(expect))
-					})
-				}
-			})
+		for _, b := range Compares {
+			b.Implements(t, c)
 		}
 		t.Run("Nil", func(t *testing.T) {
 			Expect(t, c.rt.Implements(nil), BeFalse())
@@ -247,38 +321,22 @@ func (c *Case) Run(t *testing.T) {
 	})
 
 	t.Run("AssignableTo", func(t *testing.T) {
-		for _, b := range Bundles {
-			t.Run(b.Name(), func(t *testing.T) {
-				expect := c.r.AssignableTo(b.rtyp)
-				for _, v := range b.Types() {
-					t.Run(v.Name(), func(t *testing.T) {
-						Expect(t, c.rt.AssignableTo(v.T()), Equal(expect))
-						Expect(t, c.tt.AssignableTo(v.T()), Equal(expect))
-					})
-				}
-			})
-		}
-		t.Run("Nil", func(t *testing.T) {
-			Expect(t, c.rt.AssignableTo(nil), BeFalse())
-			Expect(t, c.tt.AssignableTo(nil), BeFalse())
-		})
-	})
-
-	t.Run("ConvertibleTo", func(t *testing.T) {
-		for _, b := range Bundles {
-			t.Run(b.Name(), func(t *testing.T) {
-				expect := c.r.ConvertibleTo(b.rtyp)
-				for _, v := range b.Types() {
-					t.Run(v.Name(), func(t *testing.T) {
-						Expect(t, c.rt.ConvertibleTo(v.T()), Equal(expect))
-						Expect(t, c.tt.ConvertibleTo(v.T()), Equal(expect))
-					})
-				}
-			})
+		for _, b := range Compares {
+			b.AssignableTo(t, c)
 		}
 		t.Run("Nil", func(t *testing.T) {
 			Expect(t, c.rt.ConvertibleTo(nil), BeFalse())
 			Expect(t, c.tt.ConvertibleTo(nil), BeFalse())
+		})
+	})
+
+	t.Run("ConvertibleTo", func(t *testing.T) {
+		for _, b := range Compares {
+			b.ConvertibleTo(t, c)
+		}
+		t.Run("Nil", func(t *testing.T) {
+			Expect(t, c.rt.AssignableTo(nil), BeFalse())
+			Expect(t, c.tt.AssignableTo(nil), BeFalse())
 		})
 	})
 

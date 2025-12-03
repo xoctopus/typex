@@ -2,10 +2,8 @@ package typx_test
 
 import (
 	"go/types"
-	"reflect"
 	"testing"
 
-	"github.com/xoctopus/x/misc/must"
 	. "github.com/xoctopus/x/testx"
 
 	typi "github.com/xoctopus/typx/internal/typx"
@@ -14,21 +12,6 @@ import (
 )
 
 var path = "github.com/xoctopus/typx/testdata"
-
-func init() {
-	testdata.RegisterInstantiations(
-		func(v any) typx.Type {
-			t, ok := v.(reflect.Type)
-			must.BeTrue(ok)
-			return typx.NewRType(t)
-		},
-		func(v any) typx.Type {
-			t, ok := v.(types.Type)
-			must.BeTrue(ok)
-			return typx.NewTType(t)
-		},
-	)
-}
 
 func TestX(t *testing.T) {
 	for _, c := range testdata.Cases {
