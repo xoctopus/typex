@@ -118,15 +118,20 @@ fmt: dep clean
 
 lint: dep
 	@echo "==> static check"
-	@echo "    >>>static checking"
+	@echo ">>>govet"
 	@GOWORK=off $(GOBUILD) vet ./...
-	@echo "    done"
-	@echo "    >>>detecting ineffectual assignments"
+	@echo "done"
+	@echo ">>>golangci-lint"
+	@golangci-lint run
+	@echo "done"
+	@echo ">>>detecting ineffectual assignments"
 	@ineffassign ./...
-	@echo "    done"
-	@echo "    >>>detecting cyclomatic complexities over 10 and average"
-	@gocyclo -over 10 -avg -ignore '_test|_test.go|vendor|pb' . || true
-	@echo "    done"
+	@echo "done"
+
+
+# @echo ">>>detecting cyclomatic complexities over 10 and average"
+# @gocyclo -over 10 -avg -ignore '_test|_test.go|vendor|pb' . || true
+#@echo "done"
 
 pre-commit: dep update lint fmt view-cover
 

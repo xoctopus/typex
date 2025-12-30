@@ -1,8 +1,8 @@
 module github.com/xoctopus/typx
 
-go 1.25.4
+go 1.25.5
 
-require github.com/xoctopus/x v0.2.4
+require github.com/xoctopus/x v0.2.7
 
 require (
 	github.com/google/go-cmp v0.7.0 // indirect

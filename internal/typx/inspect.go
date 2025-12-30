@@ -149,7 +149,6 @@ func (i *inspector) inspect(t types.Type) {
 			}
 		}
 	}
-	return
 }
 
 func (i *inspector) unambiguous() []*types.Func {

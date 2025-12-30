@@ -1,0 +1,41 @@
+# GolangCI-Lint configuration file
+# Docs: https://golangci-lint.run/usage/configuration/
+
+version: 2
+
+run:
+  timeout: 2m
+  concurrency: 4
+  tests: false
+  skip-dirs:
+    - vendor
+  skip-files:
+    - "*_generated.go"
+    - "*.pb.go"
+
+output:
+  format: colored-line-number
+  sort-results: true
+
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    - linters: [ errcheck ]
+      text: "defer *.Close()"
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - staticcheck
+  settings:
+    staticcheck:
+      checks:
+        - all
+        - -QF1001
+        - -ST1000
+
