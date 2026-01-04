@@ -1,147 +1,131 @@
-PACKAGES=$(shell go list ./... | grep -E -v 'pb$|testdata|mock|proto|example|testx/internal')
-IGNORED=_gen.go|.pb.go|_mock.go|_genx_
-MOD=$(shell cat go.mod | grep ^module -m 1 | awk '{ print $$2; }' || '')
-MOD_NAME=$(shell basename $(MOD))
 
-GOTEST=go
-GOBUILD=go
+# go package info
+MODULE_PATH    := $(shell cat go.mod | grep ^module -m 1 | awk '{ print $$2; }' || '')
+MODULE_NAME    := $(shell basename $(MODULE_PATH))
+TEST_IGNORES   := "_gen.go|.pb.go|_mock.go|_genx_|main.go|testing.go|example/"
+FORMAT_IGNORES := ".git/,.xgo/,*.pb.go,*_genx_*"
 
-# dependencies
-DEP_FMT=$(shell type goimports-reviser > /dev/null 2>&1 && echo $$?)
-DEP_XGO=$(shell type xgo > /dev/null 2>&1 && echo $$?)
-DEP_INEFFASSIGN=$(shell type ineffassign > /dev/null 2>&1 && echo $$?)
-DEP_GOCYCLO=$(shell type gocyclo > /dev/null 2>&1 && echo $$?)
-DEP_LINTER=$(shell type golangci-lint > /dev/null 2>&1 && echo $$?)
-
-# git info
-GIT_COMMIT=$(shell git rev-parse --short HEAD)
-GIT_TAG=$(shell git describe --tags --abbrev=0)
-GIT_BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
+# git repository info
+IS_GIT_REPO := $(shell git rev-parse --is-inside-work-tree >/dev/null 2>&1 && echo 1 || echo 0)
+ifeq ($(IS_GIT_REPO),1)
+GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "")
+GIT_TAG    := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "")
+GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+else
+GIT_COMMIT := ""
+GIT_TAG    := ""
+GIT_BRANCH := ""
+endif
 BUILD_AT=$(shell date "+%Y%m%d%H%M%S")
 
-show:
-	@echo "packages:"
-	@for item in $(PACKAGES); do echo "    $$item"; done
-	@echo "module:"
-	@echo "    path=$(MOD)"
-	@echo "    module=$(MOD_NAME)"
-	@echo "tools:"
-	@echo "    build=$(GOBUILD)"
-	@echo "    test=$(GOTEST)"
-	@echo "    goimports-reviser=$(shell which goimports-reviser)"
-	@echo "    xgo=$(shell which xgo)"
-	@echo "    ineffassign=$(shell which ineffassign)"
-	@echo "    gocyclo=$(shell which gocyclo)"
-	@echo "git:"
-	@echo "    commit_id=$(GIT_COMMIT)"
-	@echo "    tag=$(GIT_TAG)"
-	@echo "    branch=$(GIT_BRANCH)"
-	@echo "    build_time=$(BUILD_AT)"
-	@echo "    name=$(MOD_NAME)"
+# global env variables
+export GOWORK := off
 
-# install dependencies
+# go build tools
+GOTEST  := go
+GOBUILD := go
+
+# dependencies flags
+DEP_DEVGEN            := $(shell type devgen > /dev/null 2>&1 && echo $$?)
+DEP_GIT_CHGLOG        := $(shell type git-chglog > /dev/null 2>&1 && echo $$?)
+DEP_GOIMPORTS_REVISER := $(shell type goimports-reviser > /dev/null 2>&1 && echo $$?)
+DEP_GOLANGCI_LINT     := $(shell type golangci-lint > /dev/null 2>&1 && echo $$?)
+
+show:
+	@echo "module:"
+	@echo "	path=$(MODULE_PATH)"
+	@echo "	module=$(MODULE_NAME)"
+	@echo "git:"
+	@echo "	commit_id=$(GIT_COMMIT)"
+	@echo "	tag=$(GIT_TAG)"
+	@echo "	branch=$(GIT_BRANCH)"
+	@echo "	build_time=$(BUILD_AT)"
+	@echo "	name=$(MODULE_NAME)"
+	@echo "tools:"
+	@echo "	build=$(GOBUILD)"
+	@echo "	test=$(GOTEST)"
+	@echo "	devgen=$(shell which devgen) $(DEP_DEVGEN)"
+	@echo "	git-chglog=$(shell which git-chglog) $(DEP_GIT_CHGLOG)"
+	@echo "	goimports-reviser=$(shell which goimports-reviser) $(DEP_GOIMPORTS_REVISER)"
+	@echo "	golangci-lint=$(shell which golangci-lint) $(DEP_GOLANGCI_LINT)"
+
 dep:
 	@echo "==> installing dependencies"
-	@if [ "${DEP_FMT}" != "0" ]; then \
-		echo "    goimports-reviser for format sources"; \
-		go install github.com/incu6us/goimports-reviser/v3@latest; \
+	@if [ "${DEP_DEVGEN}" != "0" ]; then \
+		echo "	devgen for dev configuration generating"; \
+		go install github.com/xoctopus/devx/cmd/devgen@main; \
+		echo "	DONE."; \
 	fi
-	@if [ "${GOTEST}" = "xgo" ] && [ "${DEP_XGO}" != "0" ]; then \
-		echo "    xgo for unit test"; \
-		go install github.com/xhd2015/xgo/cmd/xgo@latest; \
-	fi
-	@if [ "${DEP_INEFFASSIGN}" != "0" ]; then \
-		echo "    ineffassign for detecting ineffectual assignments"; \
-		go install github.com/gordonklaus/ineffassign@latest; \
-	fi
-	@if [ "${DEP_GOCYCLO}" != "0" ]; then \
-		echo "\tgocyclo for calculating cyclomatic complexities of functions"; \
-		go install github.com/fzipp/gocyclo/cmd/gocyclo@latest; \
-	fi
-	@if [ "${DEP_LINTER}" != "0" ]; then \
-		echo "\tgolangci-lint for code static checking"; \
-		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest ;\
-	fi
-	@if [ "${DEP_CHGLOG}" != "0" ]; then \
-		echo "\tgit-chglog for changelog generating"; \
+	@if [ "${DEP_GIT_CHGLOG}" != "0" ]; then \
+		echo "	git-chglog for generating changelog"; \
 		go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest; \
+		echo "	DONE."; \
+	fi
+	@if [ "${DEP_GOIMPORTS_REVISER}" != "0" ]; then \
+		echo "	goimports-reviser for code formating"; \
+		go install github.com/incu6us/goimports-reviser/v3@latest; \
+		echo "	DONE."; \
+	fi
+	@if [ "${DEP_GOLANGCI_LINT}" != "0" ]; then \
+		echo "	golangci-lint for code linting"; \
+		go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest; \
+		echo "	DONE."; \
 	fi
 
 upgrade-dep:
 	@echo "==> upgrading dependencies"
-	@echo "    goimports-reviser for format sources"
+	@echo "	devgen for dev configuration generating"
+	@go install github.com/xoctopus/devx/cmd/devgen@main
+	@echo "	DONE."
+	@echo "	git-chglog for generating changelog"
+	@go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
+	@echo "	DONE."
+	@echo "	goimports-reviser for code formating"
 	@go install github.com/incu6us/goimports-reviser/v3@latest
-	@echo "    ineffassign for detecting ineffectual assignments"
-	@go install github.com/gordonklaus/ineffassign@latest
-	@echo "    gocyclo for calculating cyclomatic complexities of functions"
-	@go install github.com/gordonklaus/ineffassign@latest
-	@echo "    golangci-lint for code static checking"
+	@echo "	DONE."
+	@echo "	golangci-lint for code linting"
 	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-	@if [ "${GOTEST}" = "xgo" ]; then \
-		echo "    xgo for unit test"; \
-		go install github.com/xhd2015/xgo/cmd/xgo@latest; \
-	fi
-
-update:
-	@GOWORK=off go get -u all
-	@GOWORK=off go mod tidy
+	@echo "	DONE."
 
 tidy:
-	@echo "==> tidy"
-	@GOWORK=off go mod tidy
+	@echo "==> installing dependencies"
+	@go mod tidy
 
 test: dep tidy
 	@echo "==> run unit test"
-	@if [ "${GOTEST}" = "xgo" ]; then \
-		GOWORK=off $(GOTEST) test -failfast -parallel 1 -gcflags="all=-N -l" ${PACKAGES}; # xgo mock functions may cause data race \
-	else \
-		GOWORK=off $(GOTEST) test -race -failfast -parallel 1 -gcflags="all=-N -l" ${PACKAGES}; \
-	fi
+	@$(GOTEST) test ./... -race -failfast -parallel 1 -gcflags="all=-N -l"
 
 cover: dep tidy
 	@echo "==> run unit test with coverage"
-	@GOWORK=off $(GOTEST) test -failfast -parallel 1 -gcflags="all=-N -l" ${PACKAGES} -covermode=count -coverprofile=cover.out
-	@grep -vE '_gen.go|.pb.go|_mock.go|_genx_|main.go' cover.out > cover2.out && mv cover2.out cover.out
-
-ci-cover:
-	@if [ "${GOTEST}" = "xgo" ]; then \
-		go install github.com/xhd2015/xgo/cmd/xgo@latest; \
-	fi
-	@GOWORK=off $(GOTEST) test -failfast -parallel 1 -gcflags="all=-N -l" ${PACKAGES} -covermode=count -coverprofile=cover.out
+	@$(GOTEST) test ./... -failfast -parallel 1 -gcflags="all=-N -l" -covermode=count -coverprofile=cover.out
+	@grep -vE $(TEST_IGNORES) cover.out > cover2.out && mv cover2.out cover.out
 
 view-cover: cover
-	@echo "==> run unit test with coverage and view"
-	@GOWORK=off $(GOBUILD) tool cover -html cover.out
+	@echo "==> run unit test with coverage and view results"
+	@$(GOBUILD) tool cover -html cover.out
+
+ci-cover: cover
+
 
 fmt: dep clean
 	@echo "==> formating code"
 	@goimports-reviser -rm-unused \
 		-imports-order 'std,general,company,project' \
-		-project-name ${MOD} \
-		-excludes '.git/,.xgo/,*.pb.go,*_generated.go' ./...
+		-project-name ${MODULE_PATH} \
+		-excludes $(FORMAT_IGNORES) ./...
 
 lint: dep
-	@echo "==> static check"
-	@echo ">>>govet"
-	@GOWORK=off $(GOBUILD) vet ./...
-	@echo "done"
+	@echo "==> linting"
 	@echo ">>>golangci-lint"
 	@golangci-lint run
 	@echo "done"
-	@echo ">>>detecting ineffectual assignments"
-	@ineffassign ./...
-	@echo "done"
-
-# @echo ">>>detecting cyclomatic complexities over 10 and average"
-# @gocyclo -over 10 -avg -ignore '_test|_test.go|vendor|pb' . || true
-#@echo "done"
-
-chglog:
-	git chglog -o CHANGELOG.md
-
-pre-commit: dep update lint fmt view-cover chglog
 
 clean:
 	@find . -name cover.out | xargs rm -rf
 	@find . -name .xgo | xargs rm -rf
 	@rm -rf build/*
+
+changelog:
+	@git chglog -o CHANGELOG.md || true
+
+pre-commit: dep fmt lint view-cover changelog
